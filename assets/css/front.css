@@ -92,6 +92,32 @@
 	color: var(--crwp-gold);
 	font-weight: 700;
 	font-size: 1.15rem;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.4rem;
+}
+
+.crwp-price__strike {
+	color: var(--crwp-text-muted);
+	text-decoration: line-through;
+	font-weight: 500;
+	font-size: 0.9em;
+}
+
+.crwp-price__sale {
+	color: var(--crwp-gold);
+	font-weight: 700;
+}
+
+.crwp-price__badge {
+	font-size: 0.6rem;
+	font-weight: 700;
+	letter-spacing: 0.15em;
+	background: #9b4c83;
+	color: #fff;
+	padding: 0.1rem 0.45rem;
+	border-radius: 999px;
+	text-transform: uppercase;
 }
 
 .crwp-btn {

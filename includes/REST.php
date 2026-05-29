@@ -215,7 +215,7 @@ final class REST {
 			return new \WP_REST_Response( array( 'valid' => false, 'error' => __( 'This code has been fully redeemed.', 'cardology-reports' ) ), 200 );
 		}
 
-		$original_cents   = (int) $report['price_cents'];
+		$original_cents   = (int) $report['effective_price_cents'];
 		$discounted_cents = $this->discount_cents( $coupon, $original_cents );
 		$min_cents        = 50; // Stripe minimum.
 		$free             = $discounted_cents < $min_cents;
@@ -298,7 +298,7 @@ final class REST {
 			array(
 				'slug'             => $report['slug'],
 				'title'            => $report['title'],
-				'amount_cents'     => (int) $report['price_cents'],
+				'amount_cents'     => (int) $report['effective_price_cents'],
 				'currency'         => $this->stripe->currency(),
 				'customer_email'   => $customer['email'],
 				'metadata'         => $metadata,
@@ -362,7 +362,7 @@ final class REST {
 		if ( ! empty( $promo['max_redemptions'] ) && (int) $promo['times_redeemed'] >= (int) $promo['max_redemptions'] ) {
 			return new \WP_REST_Response( array( 'error' => __( 'Promo code has been fully redeemed', 'cardology-reports' ) ), 400 );
 		}
-		$final = $this->discount_cents( $coupon, (int) $report['price_cents'] );
+		$final = $this->discount_cents( $coupon, (int) $report['effective_price_cents'] );
 		if ( $final >= 50 ) {
 			return new \WP_REST_Response( array( 'error' => __( 'This code does not make the report free. Use checkout.', 'cardology-reports' ) ), 400 );
 		}

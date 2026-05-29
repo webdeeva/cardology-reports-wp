@@ -50,7 +50,7 @@ defined( 'ABSPATH' ) || exit;
 						<td><textarea class="large-text" rows="4" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][description]"><?php echo esc_textarea( $report['description'] ); ?></textarea></td>
 					</tr>
 					<tr>
-						<th scope="row"><label><?php echo esc_html__( 'Price (USD cents)', 'cardology-reports' ); ?></label></th>
+						<th scope="row"><label><?php echo esc_html__( 'Regular Price (USD cents)', 'cardology-reports' ); ?></label></th>
 						<td>
 							<input type="number" min="50" step="1" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][price_cents]" value="<?php echo esc_attr( (int) $report['price_cents'] ); ?>" />
 							<p class="description">
@@ -61,6 +61,41 @@ defined( 'ABSPATH' ) || exit;
 									'<strong>$' . esc_html( number_format( $report['price_cents'] / 100, 2 ) ) . '</strong>'
 								);
 								?>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label><?php echo esc_html__( 'Sale Price (USD cents)', 'cardology-reports' ); ?></label></th>
+						<td>
+							<input type="number" min="0" step="1" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][sale_price_cents]" value="<?php echo esc_attr( (int) $report['sale_price_cents'] ); ?>" placeholder="0" />
+							<p class="description">
+								<?php
+								if ( ! empty( $report['on_sale'] ) ) {
+									printf(
+										/* translators: %s formatted price */
+										esc_html__( 'Currently ON SALE at %s. Set to 0 to remove the sale.', 'cardology-reports' ),
+										'<strong>$' . esc_html( number_format( $report['sale_price_cents'] / 100, 2 ) ) . '</strong>'
+									);
+								} else {
+									echo esc_html__( 'Optional. Must be lower than the regular price and meet Stripe’s 50¢ minimum. Leave 0 to disable the sale.', 'cardology-reports' );
+								}
+								?>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label><?php echo esc_html__( 'Sale Dates', 'cardology-reports' ); ?></label></th>
+						<td>
+							<label style="display:inline-flex;flex-direction:column;gap:0.15rem;margin-right:1rem;font-size:0.85em;">
+								<span><?php echo esc_html__( 'Starts', 'cardology-reports' ); ?></span>
+								<input type="date" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][sale_start_date]" value="<?php echo esc_attr( $report['sale_start_date'] ); ?>" />
+							</label>
+							<label style="display:inline-flex;flex-direction:column;gap:0.15rem;font-size:0.85em;">
+								<span><?php echo esc_html__( 'Ends', 'cardology-reports' ); ?></span>
+								<input type="date" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][sale_end_date]" value="<?php echo esc_attr( $report['sale_end_date'] ); ?>" />
+							</label>
+							<p class="description">
+								<?php echo esc_html__( 'Both optional. Leave blank to start immediately / never expire. Times respect the site timezone.', 'cardology-reports' ); ?>
 							</p>
 						</td>
 					</tr>

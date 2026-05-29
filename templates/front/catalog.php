@@ -30,7 +30,15 @@ defined( 'ABSPATH' ) || exit;
 					<?php endif; ?>
 				</div>
 				<div class="crwp-card__footer">
-					<span class="crwp-price">$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?></span>
+					<?php if ( ! empty( $report['on_sale'] ) ) : ?>
+						<span class="crwp-price">
+							<span class="crwp-price__strike">$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?></span>
+							<span class="crwp-price__sale">$<?php echo esc_html( number_format( $report['sale_price_cents'] / 100, 2 ) ); ?></span>
+							<span class="crwp-price__badge"><?php echo esc_html__( 'SALE', 'cardology-reports' ); ?></span>
+						</span>
+					<?php else : ?>
+						<span class="crwp-price">$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?></span>
+					<?php endif; ?>
 					<button type="button" class="crwp-btn crwp-btn--gold" data-crwp-open-form data-slug="<?php echo esc_attr( $report['slug'] ); ?>">
 						<?php echo esc_html__( 'Order this report', 'cardology-reports' ); ?>
 					</button>

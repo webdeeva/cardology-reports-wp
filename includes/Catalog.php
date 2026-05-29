@@ -152,11 +152,19 @@ final class Catalog {
 			$row['price_cents']       = isset( $override['price_cents'] ) && (int) $override['price_cents'] > 0
 				? (int) $override['price_cents']
 				: $default['price_cents'];
+			$row['sale_price_cents']  = isset( $override['sale_price_cents'] ) && (int) $override['sale_price_cents'] > 0
+				? (int) $override['sale_price_cents']
+				: 0;
+			$row['sale_start_date']   = isset( $override['sale_start_date'] ) ? (string) $override['sale_start_date'] : '';
+			$row['sale_end_date']     = isset( $override['sale_end_date'] ) ? (string) $override['sale_end_date'] : '';
 			// Default to enabled; admins can opt-out per report.
 			$row['enabled']           = array_key_exists( 'enabled', $override )
 				? (bool) $override['enabled']
 				: true;
 			$row['slug']              = $slug;
+			// Derive sale state at read-time so it stays in sync with the clock.
+			$row['on_sale']           = self::is_sale_active( $row );
+			$row['effective_price_cents'] = $row['on_sale'] ? $row['sale_price_cents'] : $row['price_cents'];
 			$out[ $slug ]             = $row;
 		}
 		return $out;
@@ -180,6 +188,59 @@ final class Catalog {
 	}
 
 	/**
+	 * The price to actually charge: sale price when active, regular otherwise.
+	 */
+	public function effective_price_cents( string $slug ): int {
+		$row = $this->get( $slug );
+		return $row ? (int) $row['effective_price_cents'] : 0;
+	}
+
+	/**
+	 * True when sale_price_cents is positive, strictly less than the regular price,
+	 * and (if dates are set) the current site-time falls inside the window.
+	 *
+	 * @param array<string,mixed> $row Already-merged row from {@see all()}.
+	 */
+	private static function is_sale_active( array $row ): bool {
+		$sale = (int) ( $row['sale_price_cents'] ?? 0 );
+		$reg  = (int) ( $row['price_cents'] ?? 0 );
+		if ( $sale <= 0 || $sale >= $reg ) {
+			return false;
+		}
+		$start = (string) ( $row['sale_start_date'] ?? '' );
+		$end   = (string) ( $row['sale_end_date'] ?? '' );
+		try {
+			$now = current_datetime();
+		} catch ( \Exception $e ) {
+			$now = new \DateTimeImmutable( 'now' );
+		}
+		if ( '' !== $start ) {
+			$start_dt = self::parse_date_boundary( $start, '00:00:00' );
+			if ( $start_dt && $now < $start_dt ) {
+				return false;
+			}
+		}
+		if ( '' !== $end ) {
+			$end_dt = self::parse_date_boundary( $end, '23:59:59' );
+			if ( $end_dt && $now > $end_dt ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static function parse_date_boundary( string $date, string $time ): ?\DateTimeImmutable {
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
+			return null;
+		}
+		try {
+			return new \DateTimeImmutable( $date . 'T' . $time, wp_timezone() );
+		} catch ( \Exception $e ) {
+			return null;
+		}
+	}
+
+	/**
 	 * Persists the editable subset of the catalog. Called from the admin save handler.
 	 *
 	 * @param array<string,array<string,mixed>> $input Untrusted input.
@@ -191,11 +252,18 @@ final class Catalog {
 			if ( ! isset( $input[ $slug ] ) || ! is_array( $input[ $slug ] ) ) {
 				continue;
 			}
+			$sale_price = max( 0, (int) ( $input[ $slug ]['sale_price_cents'] ?? 0 ) );
+			$start_raw  = sanitize_text_field( wp_unslash( $input[ $slug ]['sale_start_date'] ?? '' ) );
+			$end_raw    = sanitize_text_field( wp_unslash( $input[ $slug ]['sale_end_date'] ?? '' ) );
 			$cleaned[ $slug ] = array(
 				'title'             => sanitize_text_field( wp_unslash( $input[ $slug ]['title'] ?? '' ) ),
 				'short_description' => sanitize_text_field( wp_unslash( $input[ $slug ]['short_description'] ?? '' ) ),
 				'description'       => wp_kses_post( wp_unslash( $input[ $slug ]['description'] ?? '' ) ),
 				'price_cents'       => max( 0, (int) ( $input[ $slug ]['price_cents'] ?? 0 ) ),
+				'sale_price_cents'  => $sale_price,
+				// Store dates as YYYY-MM-DD or empty. Anything else is dropped.
+				'sale_start_date'   => preg_match( '/^\d{4}-\d{2}-\d{2}$/', $start_raw ) ? $start_raw : '',
+				'sale_end_date'     => preg_match( '/^\d{4}-\d{2}-\d{2}$/', $end_raw ) ? $end_raw : '',
 				// Unchecked checkboxes don't submit, so the form sends a hidden
 				// `enabled_present=1` for every row and we treat absence of
 				// `enabled` as "disabled".

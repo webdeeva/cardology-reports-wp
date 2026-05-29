@@ -11,7 +11,15 @@ defined( 'ABSPATH' ) || exit;
 	<header class="crwp-single__hero">
 		<h2><?php echo esc_html( $report['title'] ); ?></h2>
 		<p class="crwp-single__desc"><?php echo wp_kses_post( $report['description'] ); ?></p>
-		<div class="crwp-single__price">$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?></div>
+		<div class="crwp-single__price">
+			<?php if ( ! empty( $report['on_sale'] ) ) : ?>
+				<span class="crwp-price__strike">$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?></span>
+				<span class="crwp-price__sale">$<?php echo esc_html( number_format( $report['sale_price_cents'] / 100, 2 ) ); ?></span>
+				<span class="crwp-price__badge"><?php echo esc_html__( 'SALE', 'cardology-reports' ); ?></span>
+			<?php else : ?>
+				$<?php echo esc_html( number_format( $report['price_cents'] / 100, 2 ) ); ?>
+			<?php endif; ?>
+		</div>
 	</header>
 
 	<form class="crwp-form" data-crwp-form data-slug="<?php echo esc_attr( $report['slug'] ); ?>">
@@ -76,7 +84,7 @@ defined( 'ABSPATH' ) || exit;
 			printf(
 				/* translators: %s formatted price */
 				esc_html__( 'Continue to Checkout — %s', 'cardology-reports' ),
-				esc_html( '$' . number_format( $report['price_cents'] / 100, 2 ) )
+				esc_html( '$' . number_format( $report['effective_price_cents'] / 100, 2 ) )
 			);
 			?>
 		</button>
