@@ -106,7 +106,7 @@ $tabs        = array(
 						<label class="crwp-swatch <?php echo $appearance['theme'] === $preset_slug ? 'is-active' : ''; ?>">
 							<input
 								type="radio"
-								name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[theme]"
+								name="<?php echo esc_attr( \CRWP\Appearance::OPTION_KEY ); ?>[theme]"
 								value="<?php echo esc_attr( $preset_slug ); ?>"
 								<?php checked( $appearance['theme'], $preset_slug ); ?>
 							/>
@@ -125,7 +125,7 @@ $tabs        = array(
 			<label class="crwp-swatch crwp-swatch--custom <?php echo $appearance['theme'] === 'custom' ? 'is-active' : ''; ?>">
 				<input
 					type="radio"
-					name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[theme]"
+					name="<?php echo esc_attr( \CRWP\Appearance::OPTION_KEY ); ?>[theme]"
 					value="custom"
 					<?php checked( $appearance['theme'], 'custom' ); ?>
 				/>
@@ -154,7 +154,7 @@ $tabs        = array(
 							<td>
 								<input
 									type="text"
-									name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[custom][<?php echo esc_attr( $token_key ); ?>]"
+									name="<?php echo esc_attr( \CRWP\Appearance::OPTION_KEY ); ?>[custom][<?php echo esc_attr( $token_key ); ?>]"
 									value="<?php echo esc_attr( $value ); ?>"
 									placeholder="<?php echo esc_attr( $token['default'] ); ?>"
 									class="regular-text"
