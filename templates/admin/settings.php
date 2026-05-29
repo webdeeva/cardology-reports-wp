@@ -78,16 +78,56 @@ $tabs        = array(
 		</form>
 
 	<?php elseif ( 'email' === $current_tab ) : ?>
+		<?php
+		$host          = \CRWP\Mailer::site_host();
+		$admin_email   = (string) get_option( 'admin_email' );
+		$noreply_addr  = 'noreply@' . $host;
+		$default_addr  = 'wordpress@' . $host;
+		?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'crwp_email' ); ?>
 			<table class="form-table" role="presentation">
 				<tr><th scope="row"><?php echo esc_html__( 'From name', 'cardology-reports' ); ?></th>
-					<td><input class="regular-text" type="text" name="crwp_email_settings[from_name]" value="<?php echo esc_attr( $email['from_name'] ); ?>" /></td></tr>
-				<tr><th scope="row"><?php echo esc_html__( 'From email', 'cardology-reports' ); ?></th>
-					<td><input class="regular-text" type="email" name="crwp_email_settings[from_email]" value="<?php echo esc_attr( $email['from_email'] ); ?>" /></td></tr>
+					<td>
+						<input class="regular-text" type="text" name="crwp_email_settings[from_name]" value="<?php echo esc_attr( $email['from_name'] ); ?>" />
+						<p class="description">
+							<?php
+							/* translators: %s site name */
+							printf( esc_html__( 'Defaults to your WordPress site name (%s).', 'cardology-reports' ), '<code>' . esc_html( get_bloginfo( 'name' ) ) . '</code>' );
+							?>
+						</p>
+					</td>
+				</tr>
+				<tr><th scope="row"><?php echo esc_html__( 'From address', 'cardology-reports' ); ?></th>
+					<td>
+						<fieldset>
+							<label style="display:block;margin-bottom:0.4rem;">
+								<input type="radio" name="crwp_email_settings[from_email_mode]" value="<?php echo esc_attr( \CRWP\Mailer::FROM_MODE_NOREPLY ); ?>" <?php checked( $email['from_email_mode'], \CRWP\Mailer::FROM_MODE_NOREPLY ); ?> />
+								<?php echo esc_html__( 'No-reply', 'cardology-reports' ); ?>
+								<code><?php echo esc_html( $noreply_addr ); ?></code>
+								<span class="description"><?php echo esc_html__( '— recommended for transactional emails', 'cardology-reports' ); ?></span>
+							</label>
+							<label style="display:block;margin-bottom:0.4rem;">
+								<input type="radio" name="crwp_email_settings[from_email_mode]" value="<?php echo esc_attr( \CRWP\Mailer::FROM_MODE_SITE_DEFAULT ); ?>" <?php checked( $email['from_email_mode'], \CRWP\Mailer::FROM_MODE_SITE_DEFAULT ); ?> />
+								<?php echo esc_html__( 'WordPress default', 'cardology-reports' ); ?>
+								<code><?php echo esc_html( $default_addr ); ?></code>
+							</label>
+							<label style="display:block;margin-bottom:0.4rem;">
+								<input type="radio" name="crwp_email_settings[from_email_mode]" value="<?php echo esc_attr( \CRWP\Mailer::FROM_MODE_ADMIN ); ?>" <?php checked( $email['from_email_mode'], \CRWP\Mailer::FROM_MODE_ADMIN ); ?> />
+								<?php echo esc_html__( 'Site admin email', 'cardology-reports' ); ?>
+								<code><?php echo esc_html( $admin_email ); ?></code>
+							</label>
+							<label style="display:block;margin-bottom:0.4rem;">
+								<input type="radio" name="crwp_email_settings[from_email_mode]" value="<?php echo esc_attr( \CRWP\Mailer::FROM_MODE_CUSTOM ); ?>" <?php checked( $email['from_email_mode'], \CRWP\Mailer::FROM_MODE_CUSTOM ); ?> />
+								<?php echo esc_html__( 'Custom address', 'cardology-reports' ); ?>
+								<input class="regular-text" type="email" name="crwp_email_settings[from_email]" value="<?php echo esc_attr( $email['from_email'] ); ?>" placeholder="hello@yourdomain.com" style="margin-left:0.5rem;" />
+							</label>
+						</fieldset>
+					</td>
+				</tr>
 			</table>
 			<p class="description">
-				<?php echo esc_html__( 'Emails are sent via wp_mail(). Install an SMTP plugin (WP Mail SMTP, Postmark, etc.) for reliable delivery.', 'cardology-reports' ); ?>
+				<?php echo esc_html__( 'Emails are sent via wp_mail(). The styled header uses your selected appearance theme automatically. Install an SMTP plugin (WP Mail SMTP, Postmark, Resend-WP, etc.) for reliable deliverability of no-reply addresses.', 'cardology-reports' ); ?>
 			</p>
 			<?php submit_button(); ?>
 		</form>

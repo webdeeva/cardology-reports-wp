@@ -47,7 +47,7 @@ final class Plugin {
 		$this->stripe        = new Stripe_Client();
 		$this->report_writer = new Report_Writer_Client();
 		$this->orders        = new Orders();
-		$this->mailer        = new Mailer();
+		$this->mailer        = new Mailer( $this->appearance );
 		$this->cron          = new Cron( $this->orders, $this->report_writer, $this->mailer, $this->catalog );
 		$this->rest          = new REST( $this->catalog, $this->stripe, $this->orders, $this->report_writer, $this->mailer );
 		$this->frontend      = new Frontend( $this->catalog, $this->appearance );

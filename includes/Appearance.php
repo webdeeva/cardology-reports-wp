@@ -279,6 +279,71 @@ final class Appearance {
 	}
 
 	/**
+	 * Email-safe palette derived from the active preset (or custom tokens).
+	 * Email clients strip CSS variables and many strip gradients/rgba — every
+	 * value here is a flat hex string.
+	 *
+	 * @return array{header_bg:string,header_text:string,btn_bg:string,btn_text:string,body_bg:string,body_text:string,muted:string,divider:string}
+	 */
+	public function email_palette(): array {
+		$tokens = $this->tokens();
+		$header_bg  = self::solid_color( $tokens['--crwp-bg'] ?? '#111827', '#111827' );
+		// Pure white headers look washed-out — fall back to accent for the band.
+		if ( in_array( strtolower( $header_bg ), array( '#ffffff', '#fff' ), true ) ) {
+			$header_bg = self::solid_color( $tokens['--crwp-accent'] ?? '#111827', '#111827' );
+		}
+		// Pick header text by luminance — always contrasts with the header band.
+		$header_text = self::is_dark_color( $header_bg ) ? '#ffffff' : '#111827';
+
+		$btn_bg   = self::solid_color( $tokens['--crwp-btn-bg'] ?? '#111827', '#111827' );
+		$btn_text = self::solid_color( $tokens['--crwp-btn-text'] ?? '#ffffff', '#ffffff' );
+		return array(
+			'header_bg'   => $header_bg,
+			'header_text' => $header_text,
+			'btn_bg'      => $btn_bg,
+			'btn_text'    => $btn_text,
+			'body_bg'     => '#f8f9fa',
+			'body_text'   => '#1a1a1a',
+			'muted'       => '#6b7280',
+			'divider'     => '#e5e7eb',
+		);
+	}
+
+	/**
+	 * Cheap WCAG-style luminance check on a hex color. Returns true for dark
+	 * backgrounds so callers can pick a light text color.
+	 */
+	private static function is_dark_color( string $hex ): bool {
+		if ( ! preg_match( '/^#([0-9a-fA-F]{6})$/', $hex, $m ) ) {
+			return true;
+		}
+		$r = hexdec( substr( $m[1], 0, 2 ) );
+		$g = hexdec( substr( $m[1], 2, 2 ) );
+		$b = hexdec( substr( $m[1], 4, 2 ) );
+		// Standard rec-709 luminance.
+		$lum = ( 0.2126 * $r + 0.7152 * $g + 0.0722 * $b ) / 255;
+		return $lum < 0.55;
+	}
+
+	/**
+	 * Coerce any CSS color token (gradient, rgba, named, hex, "inherit") to a flat
+	 * hex for use in email HTML.
+	 */
+	private static function solid_color( string $value, string $fallback ): string {
+		$value = trim( $value );
+		if ( '' === $value || 'inherit' === $value ) {
+			return $fallback;
+		}
+		// Take the first hex code found anywhere in the value (handles gradients too).
+		if ( preg_match( '/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/', $value, $m ) ) {
+			return strlen( $m[0] ) === 4
+				? '#' . str_repeat( substr( $m[0], 1, 1 ), 2 ) . str_repeat( substr( $m[0], 2, 1 ), 2 ) . str_repeat( substr( $m[0], 3, 1 ), 2 )
+				: $m[0];
+		}
+		return $fallback;
+	}
+
+	/**
 	 * Sanitiser used by register_setting.
 	 */
 	public static function sanitize( $input ): array {

@@ -182,10 +182,20 @@ final class Admin {
 	}
 
 	public function sanitize_email( $input ): array {
-		$input = is_array( $input ) ? $input : array();
+		$input        = is_array( $input ) ? $input : array();
+		$allowed_modes = array(
+			Mailer::FROM_MODE_SITE_DEFAULT,
+			Mailer::FROM_MODE_ADMIN,
+			Mailer::FROM_MODE_NOREPLY,
+			Mailer::FROM_MODE_CUSTOM,
+		);
+		$mode = isset( $input['from_email_mode'] ) && in_array( $input['from_email_mode'], $allowed_modes, true )
+			? $input['from_email_mode']
+			: Mailer::FROM_MODE_NOREPLY;
 		return array(
-			'from_name'  => sanitize_text_field( $input['from_name'] ?? get_bloginfo( 'name' ) ),
-			'from_email' => sanitize_email( $input['from_email'] ?? get_option( 'admin_email' ) ),
+			'from_name'       => sanitize_text_field( $input['from_name'] ?? get_bloginfo( 'name' ) ),
+			'from_email_mode' => $mode,
+			'from_email'      => sanitize_email( $input['from_email'] ?? '' ),
 		);
 	}
 

@@ -11,10 +11,23 @@ final class Mailer {
 
 	public const SETTINGS_KEY = 'crwp_email_settings';
 
+	/** From-address selection modes shown in the admin. */
+	public const FROM_MODE_SITE_DEFAULT = 'site_default';
+	public const FROM_MODE_ADMIN        = 'admin';
+	public const FROM_MODE_NOREPLY      = 'noreply';
+	public const FROM_MODE_CUSTOM       = 'custom';
+
+	private Appearance $appearance;
+
+	public function __construct( Appearance $appearance ) {
+		$this->appearance = $appearance;
+	}
+
 	public function settings(): array {
 		$defaults = array(
-			'from_name'  => get_bloginfo( 'name' ),
-			'from_email' => get_option( 'admin_email' ),
+			'from_name'       => get_bloginfo( 'name' ),
+			'from_email_mode' => self::FROM_MODE_NOREPLY,
+			'from_email'      => '',
 		);
 		$saved    = get_option( self::SETTINGS_KEY, array() );
 		if ( ! is_array( $saved ) ) {
@@ -23,11 +36,46 @@ final class Mailer {
 		return array_merge( $defaults, $saved );
 	}
 
+	/**
+	 * Resolve the actual From address based on the selected mode.
+	 */
+	public function resolve_from_email(): string {
+		$s    = $this->settings();
+		$mode = (string) $s['from_email_mode'];
+		switch ( $mode ) {
+			case self::FROM_MODE_ADMIN:
+				$email = (string) get_option( 'admin_email' );
+				break;
+			case self::FROM_MODE_CUSTOM:
+				$email = sanitize_email( (string) $s['from_email'] );
+				if ( '' === $email ) {
+					$email = (string) get_option( 'admin_email' );
+				}
+				break;
+			case self::FROM_MODE_NOREPLY:
+				$email = 'noreply@' . self::site_host();
+				break;
+			case self::FROM_MODE_SITE_DEFAULT:
+			default:
+				// Mirrors WordPress core's default from address (wordpress@<host>).
+				$email = 'wordpress@' . self::site_host();
+				break;
+		}
+		return $email;
+	}
+
+	public static function site_host(): string {
+		$host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		// Strip leading www. so the address looks cleaner.
+		return preg_replace( '/^www\./i', '', $host );
+	}
+
 	private function headers(): array {
-		$s = $this->settings();
+		$s    = $this->settings();
+		$from = $this->resolve_from_email();
 		return array(
 			'Content-Type: text/html; charset=UTF-8',
-			sprintf( 'From: %s <%s>', $s['from_name'], $s['from_email'] ),
+			sprintf( 'From: %s <%s>', $s['from_name'], $from ),
 		);
 	}
 
@@ -42,6 +90,9 @@ final class Mailer {
 			array(
 				'order'      => $order,
 				'status_url' => $status_url,
+				'palette'    => $this->appearance->email_palette(),
+				'site_name'  => get_bloginfo( 'name' ),
+				'site_url'   => home_url(),
 			)
 		);
 		return (bool) wp_mail( $order['customer_email'], $subject, $body, $this->headers() );
@@ -58,6 +109,9 @@ final class Mailer {
 			array(
 				'order'      => $order,
 				'report_url' => $report_url,
+				'palette'    => $this->appearance->email_palette(),
+				'site_name'  => get_bloginfo( 'name' ),
+				'site_url'   => home_url(),
 			)
 		);
 		return (bool) wp_mail( $order['customer_email'], $subject, $body, $this->headers() );
