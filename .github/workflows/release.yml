@@ -1,0 +1,103 @@
+name: Build & Publish Release
+
+# Tagging a version (e.g. `v1.0.1`) produces a downloadable plugin zip attached
+# to the GitHub Release. Use the same zip for paid distribution.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to attach the zip to (e.g. v1.0.0). Defaults to current branch HEAD.'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            TAG="${{ inputs.version }}"
+          else
+            TAG="dev-$(date -u +%Y%m%d%H%M%S)"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify plugin header version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          HEADER_VERSION=$(grep -E '^\s*\*\s*Version:' cardology-reports.php | awk -F: '{print $2}' | xargs)
+          STABLE_VERSION=$(grep -E '^Stable tag:' readme.txt | awk -F: '{print $2}' | xargs)
+          echo "Header: $HEADER_VERSION  | readme: $STABLE_VERSION  | tag: ${{ steps.version.outputs.version }}"
+          if [[ "$HEADER_VERSION" != "${{ steps.version.outputs.version }}" ]]; then
+            echo "::error::Plugin Version header ($HEADER_VERSION) does not match tag (${{ steps.version.outputs.version }}). Update cardology-reports.php before tagging."
+            exit 1
+          fi
+          if [[ "$STABLE_VERSION" != "${{ steps.version.outputs.version }}" ]]; then
+            echo "::error::readme.txt Stable tag ($STABLE_VERSION) does not match tag (${{ steps.version.outputs.version }})."
+            exit 1
+          fi
+
+      - name: Build distributable zip
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE=$(mktemp -d)
+          PLUGIN_DIR="$STAGE/cardology-reports"
+          mkdir -p "$PLUGIN_DIR"
+
+          # rsync is friendlier than `zip -x` for layered excludes.
+          rsync -av \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.gitignore' \
+            --exclude='.DS_Store' \
+            --exclude='README.md' \
+            --exclude='node_modules/' \
+            --exclude='vendor/' \
+            --exclude='tests/' \
+            --exclude='*.zip' \
+            --exclude='composer.lock' \
+            ./ "$PLUGIN_DIR/"
+
+          ZIP="cardology-reports-${{ steps.version.outputs.version }}.zip"
+          (cd "$STAGE" && zip -r "$ZIP" cardology-reports)
+          mv "$STAGE/$ZIP" "$ZIP"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+
+          # Print contents for the workflow log.
+          unzip -l "$ZIP" | tail -50
+
+      - name: Upload zip as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardology-reports-${{ steps.version.outputs.version }}
+          path: ${{ steps.build.outputs.zip }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create / update GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: ${{ steps.build.outputs.zip }}
+          fail_on_unmatched_files: true

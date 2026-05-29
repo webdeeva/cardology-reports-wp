@@ -18,3 +18,4 @@ wp-cli.local.yml
 # Build artifacts
 dist/
 build/
+cardology-reports-*.zip
