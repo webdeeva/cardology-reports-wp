@@ -72,3 +72,93 @@
 	gap: 0.2rem;
 	font-size: 0.85em;
 }
+
+.crwp-appearance__group-title {
+	margin-top: 1.5rem;
+	margin-bottom: 0.5rem;
+	font-size: 0.85rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: #50575e;
+}
+
+.crwp-swatch-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+.crwp-swatch {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border: 2px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.crwp-swatch:hover {
+	border-color: #2271b1;
+	transform: translateY(-1px);
+}
+
+.crwp-swatch.is-active {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 3px rgba(34, 113, 177, 0.15);
+}
+
+.crwp-swatch input[type="radio"] {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.crwp-swatch__chips {
+	display: flex;
+	gap: 0.25rem;
+	height: 36px;
+}
+
+.crwp-swatch__chip {
+	flex: 1;
+	border-radius: 4px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.crwp-swatch__label {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: #1d2327;
+}
+
+.crwp-swatch--custom {
+	max-width: 320px;
+}
+
+.crwp-custom-tokens {
+	margin-top: 1rem;
+	padding: 0.75rem 1rem;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.crwp-custom-tokens summary {
+	cursor: pointer;
+	font-weight: 600;
+	margin: -0.25rem 0;
+}
+
+.crwp-custom-tokens input[type="color"] {
+	vertical-align: middle;
+	margin-left: 0.5rem;
+	width: 36px;
+	height: 30px;
+	padding: 0;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}

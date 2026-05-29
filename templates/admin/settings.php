@@ -14,11 +14,12 @@ defined( 'ABSPATH' ) || exit;
 
 $current_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'stripe';
 $tabs        = array(
-	'stripe' => __( 'Stripe', 'cardology-reports' ),
-	'api'    => __( 'Report Writer API', 'cardology-reports' ),
-	'email'  => __( 'Email', 'cardology-reports' ),
-	'pages'  => __( 'Pages', 'cardology-reports' ),
-	'adv'    => __( 'Advanced', 'cardology-reports' ),
+	'stripe'     => __( 'Stripe', 'cardology-reports' ),
+	'api'        => __( 'Report Writer API', 'cardology-reports' ),
+	'email'      => __( 'Email', 'cardology-reports' ),
+	'appearance' => __( 'Appearance', 'cardology-reports' ),
+	'pages'      => __( 'Pages', 'cardology-reports' ),
+	'adv'        => __( 'Advanced', 'cardology-reports' ),
 );
 ?>
 <div class="wrap crwp-admin">
@@ -89,6 +90,85 @@ $tabs        = array(
 				<?php echo esc_html__( 'Emails are sent via wp_mail(). Install an SMTP plugin (WP Mail SMTP, Postmark, etc.) for reliable delivery.', 'cardology-reports' ); ?>
 			</p>
 			<?php submit_button(); ?>
+		</form>
+
+	<?php elseif ( 'appearance' === $current_tab ) : ?>
+		<form method="post" action="options.php" class="crwp-appearance-form">
+			<?php settings_fields( 'crwp_appearance' ); ?>
+			<p class="description">
+				<?php echo esc_html__( 'Pick a preset to style the customer-facing catalog and order form. The default uses a white background with subtle grey borders and inherits text colors from your active WordPress theme.', 'cardology-reports' ); ?>
+			</p>
+
+			<?php foreach ( $presets as $group_slug => $group ) : ?>
+				<h3 class="crwp-appearance__group-title"><?php echo esc_html( $group['label'] ); ?></h3>
+				<div class="crwp-swatch-grid">
+					<?php foreach ( $group['options'] as $preset_slug => $preset ) : ?>
+						<label class="crwp-swatch <?php echo $appearance['theme'] === $preset_slug ? 'is-active' : ''; ?>">
+							<input
+								type="radio"
+								name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[theme]"
+								value="<?php echo esc_attr( $preset_slug ); ?>"
+								<?php checked( $appearance['theme'], $preset_slug ); ?>
+							/>
+							<span class="crwp-swatch__chips">
+								<?php foreach ( $preset['swatches'] as $color ) : ?>
+									<span class="crwp-swatch__chip" style="background:<?php echo esc_attr( $color ); ?>"></span>
+								<?php endforeach; ?>
+							</span>
+							<span class="crwp-swatch__label"><?php echo esc_html( $preset['label'] ); ?></span>
+						</label>
+					<?php endforeach; ?>
+				</div>
+			<?php endforeach; ?>
+
+			<h3 class="crwp-appearance__group-title"><?php echo esc_html__( 'Custom', 'cardology-reports' ); ?></h3>
+			<label class="crwp-swatch crwp-swatch--custom <?php echo $appearance['theme'] === 'custom' ? 'is-active' : ''; ?>">
+				<input
+					type="radio"
+					name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[theme]"
+					value="custom"
+					<?php checked( $appearance['theme'], 'custom' ); ?>
+				/>
+				<span class="crwp-swatch__label"><?php echo esc_html__( 'Custom palette (use the fields below)', 'cardology-reports' ); ?></span>
+			</label>
+
+			<details class="crwp-custom-tokens" <?php echo $appearance['theme'] === 'custom' ? 'open' : ''; ?>>
+				<summary><?php echo esc_html__( 'Edit custom palette', 'cardology-reports' ); ?></summary>
+				<table class="form-table" role="presentation">
+					<?php foreach ( $tokens as $token_key => $token ) : ?>
+						<?php
+						$value = $appearance['custom'][ $token_key ] ?? $token['default'];
+						$is_color = false !== strpos( $token_key, 'crwp-bg' )
+							|| false !== strpos( $token_key, 'crwp-text' )
+							|| false !== strpos( $token_key, 'crwp-accent' )
+							|| false !== strpos( $token_key, 'crwp-btn' )
+							|| false !== strpos( $token_key, 'crwp-border' )
+							|| false !== strpos( $token_key, 'crwp-error' )
+							|| false !== strpos( $token_key, 'crwp-success' );
+						?>
+						<tr>
+							<th scope="row">
+								<label><?php echo esc_html( $token['label'] ); ?></label>
+								<p class="description" style="font-weight:normal;"><code><?php echo esc_html( $token_key ); ?></code></p>
+							</th>
+							<td>
+								<input
+									type="text"
+									name="<?php echo esc_attr( Appearance::OPTION_KEY ); ?>[custom][<?php echo esc_attr( $token_key ); ?>]"
+									value="<?php echo esc_attr( $value ); ?>"
+									placeholder="<?php echo esc_attr( $token['default'] ); ?>"
+									class="regular-text"
+								/>
+								<?php if ( $is_color ) : ?>
+									<input type="color" value="<?php echo esc_attr( preg_match( '/^#[0-9a-fA-F]{6}$/', $value ) ? $value : '#ffffff' ); ?>" onchange="this.previousElementSibling.value = this.value;" />
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+			</details>
+
+			<?php submit_button( __( 'Save Appearance', 'cardology-reports' ) ); ?>
 		</form>
 
 	<?php elseif ( 'pages' === $current_tab ) : ?>

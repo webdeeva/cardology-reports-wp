@@ -47,5 +47,11 @@ defined( 'ABSPATH' ) || exit;
 		<?php endforeach; ?>
 	</div>
 
-	<div class="crwp-form-host" data-crwp-form-host></div>
+	<div class="crwp-form-host" data-crwp-form-host>
+		<?php foreach ( $reports as $slug => $report ) : ?>
+			<div class="crwp-form-wrapper" data-crwp-form-wrapper="<?php echo esc_attr( $slug ); ?>" hidden>
+				<?php include CRWP_PLUGIN_DIR . 'templates/front/single.php'; ?>
+			</div>
+		<?php endforeach; ?>
+	</div>
 </div>

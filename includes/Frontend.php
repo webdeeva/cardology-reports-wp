@@ -14,9 +14,11 @@ defined( 'ABSPATH' ) || exit;
 final class Frontend {
 
 	private Catalog $catalog;
+	private Appearance $appearance;
 
-	public function __construct( Catalog $catalog ) {
-		$this->catalog = $catalog;
+	public function __construct( Catalog $catalog, Appearance $appearance ) {
+		$this->catalog    = $catalog;
+		$this->appearance = $appearance;
 	}
 
 	public function register_hooks(): void {
@@ -86,22 +88,22 @@ final class Frontend {
 		$reports = $this->catalog->enabled();
 		ob_start();
 		include CRWP_PLUGIN_DIR . 'templates/front/catalog.php';
-		return (string) ob_get_clean();
+		return $this->wrap_root( (string) ob_get_clean() );
 	}
 
 	public function shortcode_single( $atts ): string {
 		$atts   = shortcode_atts( array( 'slug' => '' ), (array) $atts, 'cardology_report' );
 		$report = $this->catalog->get( (string) $atts['slug'] );
 		if ( ! $report ) {
-			return '<p>' . esc_html__( 'Unknown report.', 'cardology-reports' ) . '</p>';
+			return $this->wrap_root( '<p>' . esc_html__( 'Unknown report.', 'cardology-reports' ) . '</p>' );
 		}
 		if ( empty( $report['enabled'] ) ) {
-			return '<p>' . esc_html__( 'This report is not currently available.', 'cardology-reports' ) . '</p>';
+			return $this->wrap_root( '<p>' . esc_html__( 'This report is not currently available.', 'cardology-reports' ) . '</p>' );
 		}
 		$this->enqueue();
 		ob_start();
 		include CRWP_PLUGIN_DIR . 'templates/front/single.php';
-		return (string) ob_get_clean();
+		return $this->wrap_root( (string) ob_get_clean() );
 	}
 
 	public function shortcode_status(): string {
@@ -109,6 +111,14 @@ final class Frontend {
 		$session_id = isset( $_GET['session_id'] ) ? sanitize_text_field( wp_unslash( $_GET['session_id'] ) ) : '';
 		ob_start();
 		include CRWP_PLUGIN_DIR . 'templates/front/status.php';
-		return (string) ob_get_clean();
+		return $this->wrap_root( (string) ob_get_clean() );
+	}
+
+	private function wrap_root( string $html ): string {
+		// Emit the appearance overrides directly in the shortcode output so they
+		// take effect even when the shortcode runs after wp_head.
+		$css       = $this->appearance->inline_style();
+		$style_tag = '' !== $css ? '<style id="crwp-inline-appearance">' . $css . '</style>' : '';
+		return $style_tag . '<div class="crwp-root">' . $html . '</div>';
 	}
 }

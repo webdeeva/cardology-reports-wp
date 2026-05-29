@@ -57,11 +57,27 @@
 		btn.addEventListener('click', function (e) {
 			e.preventDefault();
 			var slug = btn.getAttribute('data-slug');
-			// If the catalog page also has a status host, redirect to per-report page would be cleaner;
-			// for minimal-config sites we just navigate to the catalog page with #slug for now.
-			if (cfg.catalogUrl) {
-				window.location.assign(cfg.catalogUrl + (cfg.catalogUrl.indexOf('?') === -1 ? '?' : '&') + 'report=' + encodeURIComponent(slug));
+			var wrappers = $$('[data-crwp-form-wrapper]');
+			if (wrappers.length === 0) {
+				// Fallback for setups that have a separate catalog/single page split.
+				if (cfg.catalogUrl) {
+					window.location.assign(cfg.catalogUrl + (cfg.catalogUrl.indexOf('?') === -1 ? '?' : '&') + 'report=' + encodeURIComponent(slug));
+				}
+				return;
 			}
+			wrappers.forEach(function (w) {
+				if (w.getAttribute('data-crwp-form-wrapper') === slug) {
+					w.hidden = false;
+					w.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					// Focus the first input for instant typing.
+					var input = w.querySelector('input[name="name"]');
+					if (input) {
+						setTimeout(function () { input.focus(); }, 350);
+					}
+				} else {
+					w.hidden = true;
+				}
+			});
 		});
 	});
 

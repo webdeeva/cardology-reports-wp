@@ -2,6 +2,7 @@
 namespace CRWP\Admin;
 
 use CRWP\Catalog;
+use CRWP\Appearance;
 use CRWP\Stripe_Client;
 use CRWP\Report_Writer_Client;
 use CRWP\Mailer;
@@ -18,9 +19,11 @@ final class Admin {
 	public const MENU_SLUG = 'cardology-reports';
 
 	private Catalog $catalog;
+	private Appearance $appearance;
 
-	public function __construct( Catalog $catalog ) {
-		$this->catalog = $catalog;
+	public function __construct( Catalog $catalog, Appearance $appearance ) {
+		$this->catalog    = $catalog;
+		$this->appearance = $appearance;
 	}
 
 	public function register_hooks(): void {
@@ -110,6 +113,16 @@ final class Admin {
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_email' ),
+				'default'           => array(),
+			)
+		);
+		// Appearance.
+		register_setting(
+			'crwp_appearance',
+			Appearance::OPTION_KEY,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( Appearance::class, 'sanitize' ),
 				'default'           => array(),
 			)
 		);
@@ -313,14 +326,17 @@ final class Admin {
 		if ( ! current_user_can( self::CAP ) ) {
 			return;
 		}
-		$stripe   = ( new Stripe_Client() )->settings();
-		$report   = ( new Report_Writer_Client() )->settings();
-		$email    = ( new Mailer() )->settings();
-		$pages    = array(
+		$stripe     = ( new Stripe_Client() )->settings();
+		$report     = ( new Report_Writer_Client() )->settings();
+		$email      = ( new Mailer() )->settings();
+		$appearance = $this->appearance->settings();
+		$presets    = Appearance::presets();
+		$tokens     = Appearance::TOKENS;
+		$pages      = array(
 			'catalog' => (int) get_option( 'crwp_catalog_page_id', 0 ),
 			'status'  => (int) get_option( 'crwp_status_page_id', 0 ),
 		);
-		$advanced = array(
+		$advanced   = array(
 			'delete_on_uninstall' => (int) get_option( 'crwp_delete_data_on_uninstall', 0 ),
 		);
 		$webhook_url = esc_url( rest_url( REST::NS . '/webhook' ) );
