@@ -247,40 +247,101 @@
 		if (!host) return;
 		var sessionId = host.getAttribute('data-session-id') || '';
 		if (!sessionId) return;
-		var bar = host.querySelector('[data-crwp-progress-bar]');
+
 		var loadingEl = host.querySelector('[data-crwp-status-loading]');
-		var readyEl = host.querySelector('[data-crwp-status-ready]');
-		var failedEl = host.querySelector('[data-crwp-status-failed]');
-		var link = host.querySelector('[data-crwp-status-link]');
-		var errEl = host.querySelector('[data-crwp-status-error]');
+		var readyEl   = host.querySelector('[data-crwp-status-ready]');
+		var failedEl  = host.querySelector('[data-crwp-status-failed]');
+		var link      = host.querySelector('[data-crwp-status-link]');
+		var errEl     = host.querySelector('[data-crwp-status-error]');
+		var bar       = host.querySelector('[data-crwp-progress-bar]');
+		var pctEl     = host.querySelector('[data-crwp-progress-pct]');
+		var etaEl     = host.querySelector('[data-crwp-progress-eta]');
+		var labelEl   = host.querySelector('[data-crwp-status-label]');
+		var stepGen   = host.querySelector('[data-crwp-step="generating"]');
+		var stepDel   = host.querySelector('[data-crwp-step="delivered"]');
+		var orderPanel = host.querySelector('[data-crwp-order-panel]');
+		var orderTitle = host.querySelector('[data-crwp-order-title]');
+		var orderIdEl  = host.querySelector('[data-crwp-order-id]');
+		var readyMsg   = host.querySelector('[data-crwp-ready-message]');
 
 		var startedAt = Date.now();
+		var totalSeconds = 600; // 10-minute baseline
+		var orderShown = false;
+
+		function fmtEta(seconds) {
+			if (seconds <= 0) return 'Almost done…';
+			if (seconds < 60) return 'About ' + Math.max(1, Math.round(seconds)) + 's remaining';
+			var mins = Math.round(seconds / 60);
+			return 'About ' + mins + ' min remaining';
+		}
+
+		function showOrder(data) {
+			if (orderShown || !orderPanel) return;
+			var hasInfo = data && (data.reportTitle || data.reportSlug);
+			if (!hasInfo) return;
+			if (orderTitle && (data.reportTitle || data.reportSlug)) {
+				orderTitle.textContent = data.reportTitle || data.reportSlug;
+			}
+			if (orderIdEl) {
+				orderIdEl.textContent = sessionId.length > 18 ? sessionId.slice(0, 18) + '…' : sessionId;
+			}
+			orderPanel.hidden = false;
+			orderShown = true;
+		}
+
+		function setProcessing(data) {
+			if (data && data.status === 'paid') {
+				if (labelEl) labelEl.textContent = 'Queued for generation…';
+			} else if (data && data.status === 'processing') {
+				if (labelEl) labelEl.textContent = 'Generating your report…';
+			}
+			var elapsed = (Date.now() - startedAt) / 1000;
+			var pct = Math.min(95, 8 + (elapsed / totalSeconds) * 87);
+			if (bar) bar.style.width = pct + '%';
+			if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+			if (etaEl) etaEl.textContent = fmtEta(totalSeconds - elapsed);
+		}
+
+		function showReady(data) {
+			if (loadingEl) loadingEl.hidden = true;
+			if (readyEl) readyEl.hidden = false;
+			if (link && data.reportUrl) link.setAttribute('href', data.reportUrl);
+			if (readyMsg && data.emailSent === false) {
+				readyMsg.textContent = 'Your personalized reading is complete and ready to read.';
+			}
+			if (stepGen) stepGen.classList.remove('is-active');
+			if (stepGen) stepGen.classList.add('is-done');
+			if (stepDel) stepDel.classList.add('is-done');
+		}
+
+		function showFailed(data) {
+			if (loadingEl) loadingEl.hidden = true;
+			if (failedEl) failedEl.hidden = false;
+			if (errEl) {
+				errEl.textContent = (data && data.message)
+					? data.message
+					: "We couldn't generate your report. Your payment is safe — please reach out for help.";
+			}
+		}
 
 		function poll() {
 			fetch(cfg.restRoot + '/status?sessionId=' + encodeURIComponent(sessionId), {
 				headers: { 'X-WP-Nonce': cfg.nonce }
-			}).then(function (r) { return r.json(); })
-			.then(function (data) {
+			}).then(function (r) { return r.json(); }).then(function (data) {
+				showOrder(data);
 				if (data.status === 'completed' && data.reportUrl) {
-					if (loadingEl) loadingEl.hidden = true;
-					if (readyEl) readyEl.hidden = false;
-					if (link) link.setAttribute('href', data.reportUrl);
+					showReady(data);
 					return;
 				}
 				if (data.status === 'failed') {
-					if (loadingEl) loadingEl.hidden = true;
-					if (failedEl) failedEl.hidden = false;
-					if (errEl) errEl.textContent = data.message || 'Generation failed.';
+					showFailed(data);
 					return;
 				}
-				if (bar) {
-					var elapsed = (Date.now() - startedAt) / 1000;
-					var pct = Math.min(95, 8 + (elapsed / 600) * 87);
-					bar.style.width = pct + '%';
-				}
+				setProcessing(data);
 				setTimeout(poll, 5000);
 			}).catch(function () { setTimeout(poll, 5000); });
 		}
+		setProcessing(null);
 		poll();
 	})();
 })();

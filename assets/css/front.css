@@ -298,11 +298,12 @@
 
 .crwp-progress {
 	width: 100%;
-	height: 6px;
+	height: 8px;
 	border-radius: 999px;
 	background: var(--crwp-accent-soft);
 	overflow: hidden;
-	margin: 1rem 0;
+	margin: 1.25rem 0 0.5rem;
+	position: relative;
 }
 
 .crwp-progress__bar {
@@ -310,11 +311,21 @@
 	width: 8%;
 	background: var(--crwp-accent);
 	transition: width 0.6s ease;
+	border-radius: 999px;
 }
 
-.crwp-status__note {
-	font-size: 0.85rem;
-	color: var(--crwp-text-muted);
+.crwp-progress__shine {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+	transform: translateX(-100%);
+	animation: crwp-shine 1.8s ease-in-out infinite;
+}
+
+@keyframes crwp-shine {
+	0%   { transform: translateX(-100%); }
+	100% { transform: translateX(100%); }
 }
 
 .crwp-form-wrapper {
@@ -324,4 +335,276 @@
 
 .crwp-form-host:empty {
 	display: none;
+}
+
+/* ---------- Status page ---------- */
+
+.crwp-status {
+	padding: 0;
+	background: transparent;
+	border: 0;
+}
+
+.crwp-status__card {
+	background: var(--crwp-card-bg);
+	border: 1px solid var(--crwp-border);
+	border-radius: var(--crwp-radius);
+	padding: 2.5rem 2rem;
+	text-align: center;
+	max-width: 640px;
+	margin: 0 auto;
+	color: var(--crwp-text);
+}
+
+.crwp-status__card h2 {
+	font-size: 1.5rem;
+	margin: 0.5rem 0 0.75rem;
+	line-height: 1.25;
+}
+
+.crwp-status__lede {
+	color: var(--crwp-text-muted);
+	max-width: 28rem;
+	margin: 0 auto;
+	font-size: 0.95rem;
+}
+
+.crwp-status__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: var(--crwp-accent-soft);
+	color: var(--crwp-accent);
+	margin: 0 auto 0.75rem;
+}
+
+.crwp-status__icon--pulse {
+	animation: crwp-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes crwp-pulse {
+	0%, 100% { transform: scale(1);   opacity: 1; }
+	50%      { transform: scale(1.06); opacity: 0.85; }
+}
+
+.crwp-status__icon--success {
+	background: var(--crwp-success-bg);
+	color: #047857;
+}
+
+.crwp-status__icon--warning {
+	background: var(--crwp-error-bg);
+	color: var(--crwp-error-text);
+}
+
+.crwp-status__pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--crwp-accent);
+	background: var(--crwp-accent-soft);
+	border-radius: 999px;
+	padding: 0.3rem 0.75rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.crwp-status__pill--success {
+	color: #047857;
+	background: var(--crwp-success-bg);
+}
+
+.crwp-status__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	animation: crwp-blink 1.4s ease-in-out infinite;
+}
+
+.crwp-status__dot--success {
+	animation: none;
+}
+
+@keyframes crwp-blink {
+	0%, 100% { opacity: 1; }
+	50%      { opacity: 0.35; }
+}
+
+.crwp-status__meta {
+	font-size: 0.8rem;
+	color: var(--crwp-text-muted);
+	font-variant-numeric: tabular-nums;
+	margin-bottom: 1.75rem;
+}
+
+.crwp-status__sep {
+	margin: 0 0.4rem;
+	opacity: 0.5;
+}
+
+.crwp-status__steps {
+	list-style: none;
+	padding: 0;
+	margin: 1.75rem 0 1.5rem;
+	display: flex;
+	justify-content: center;
+	gap: 0;
+	position: relative;
+	flex-wrap: wrap;
+}
+
+.crwp-status__steps::before {
+	content: '';
+	position: absolute;
+	top: 0.4rem;
+	left: 15%;
+	right: 15%;
+	height: 2px;
+	background: var(--crwp-border);
+	z-index: 0;
+}
+
+.crwp-status__steps li {
+	flex: 1;
+	min-width: 100px;
+	max-width: 180px;
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.78rem;
+	color: var(--crwp-text-muted);
+}
+
+.crwp-status__step-dot {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--crwp-card-bg);
+	border: 2px solid var(--crwp-border);
+	transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.crwp-status__steps li.is-done .crwp-status__step-dot {
+	background: var(--crwp-accent);
+	border-color: var(--crwp-accent);
+}
+
+.crwp-status__steps li.is-done .crwp-status__step-label {
+	color: var(--crwp-text);
+	font-weight: 500;
+}
+
+.crwp-status__steps li.is-active .crwp-status__step-dot {
+	background: var(--crwp-card-bg);
+	border-color: var(--crwp-accent);
+	box-shadow: 0 0 0 4px var(--crwp-accent-soft);
+}
+
+.crwp-status__steps li.is-active .crwp-status__step-label {
+	color: var(--crwp-accent);
+	font-weight: 600;
+}
+
+.crwp-status__panel {
+	margin: 1.75rem 0 1.25rem;
+	padding: 1rem 1.25rem;
+	background: var(--crwp-accent-soft);
+	border-radius: 8px;
+	text-align: left;
+}
+
+.crwp-status__panel h3 {
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	color: var(--crwp-text-muted);
+	margin: 0 0 0.6rem;
+	font-weight: 600;
+}
+
+.crwp-status__panel dl {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.45rem 1.25rem;
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.crwp-status__panel dt {
+	color: var(--crwp-text-muted);
+	font-weight: 500;
+}
+
+.crwp-status__panel dd {
+	margin: 0;
+	color: var(--crwp-text);
+}
+
+.crwp-status__panel code {
+	background: transparent;
+	font-size: 0.85em;
+	color: var(--crwp-text-muted);
+}
+
+.crwp-status__tips {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+	text-align: left;
+}
+
+@media (min-width: 540px) {
+	.crwp-status__tips {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.crwp-status__tip {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	padding: 0.7rem 0.9rem;
+	background: var(--crwp-accent-soft);
+	border-radius: 8px;
+	font-size: 0.85rem;
+	color: var(--crwp-text);
+}
+
+.crwp-status__tip span:first-child {
+	font-size: 1.05rem;
+	line-height: 1;
+}
+
+.crwp-status__small {
+	font-size: 0.78rem;
+	color: var(--crwp-text-muted);
+	margin: 1rem 0 0;
+}
+
+.crwp-btn--xl {
+	padding: 1rem 2.25rem;
+	font-size: 1.05rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	margin: 1rem 0 0.5rem;
+}
+
+.crwp-btn__arrow {
+	transition: transform 0.2s ease;
+}
+
+.crwp-btn--xl:hover .crwp-btn__arrow {
+	transform: translateX(4px);
 }
