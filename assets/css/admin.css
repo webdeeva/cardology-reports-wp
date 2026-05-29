@@ -18,3 +18,20 @@
 	margin-right: 0.25rem;
 	color: #1d2327;
 }
+
+.crwp-pill--off {
+	background: #fbeaea;
+	border-color: #d63638;
+	color: #d63638;
+	font-weight: 600;
+	margin-left: 0.5rem;
+}
+
+.crwp-admin__panel--disabled {
+	opacity: 0.6;
+	border-left: 4px solid #d63638;
+}
+
+.crwp-switch input[type="checkbox"] {
+	margin-right: 0.4rem;
+}

@@ -16,9 +16,27 @@ defined( 'ABSPATH' ) || exit;
 		<input type="hidden" name="crwp_catalog_save" value="1" />
 
 		<?php foreach ( $reports as $slug => $report ) : ?>
-			<div class="crwp-admin__panel">
-				<h2><?php echo esc_html( $report['title'] ); ?> <small style="opacity:0.6;font-weight:normal;">(<?php echo esc_html( $slug ); ?>)</small></h2>
+			<div class="crwp-admin__panel <?php echo empty( $report['enabled'] ) ? 'crwp-admin__panel--disabled' : ''; ?>">
+				<h2>
+					<?php echo esc_html( $report['title'] ); ?>
+					<small style="opacity:0.6;font-weight:normal;">(<?php echo esc_html( $slug ); ?>)</small>
+					<?php if ( empty( $report['enabled'] ) ) : ?>
+						<span class="crwp-pill crwp-pill--off"><?php echo esc_html__( 'Disabled', 'cardology-reports' ); ?></span>
+					<?php endif; ?>
+				</h2>
 				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label><?php echo esc_html__( 'Status', 'cardology-reports' ); ?></label></th>
+						<td>
+							<label class="crwp-switch">
+								<input type="checkbox" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][enabled]" value="1" <?php checked( ! empty( $report['enabled'] ) ); ?> />
+								<?php echo esc_html__( 'Enabled — customers can see and purchase this report.', 'cardology-reports' ); ?>
+							</label>
+							<p class="description">
+								<?php echo esc_html__( 'Uncheck to hide this report from the catalog and reject in-flight purchase attempts at this slug.', 'cardology-reports' ); ?>
+							</p>
+						</td>
+					</tr>
 					<tr>
 						<th scope="row"><label><?php echo esc_html__( 'Title', 'cardology-reports' ); ?></label></th>
 						<td><input class="regular-text" type="text" name="crwp_catalog[<?php echo esc_attr( $slug ); ?>][title]" value="<?php echo esc_attr( $report['title'] ); ?>" /></td>

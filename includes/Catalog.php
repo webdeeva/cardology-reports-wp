@@ -124,7 +124,10 @@ final class Catalog {
 	/**
 	 * Returns the catalog, merging admin overrides with defaults.
 	 * Structural flags (requires_partner, etc.) always come from defaults — admins
-	 * can only override the editable fields (title, descriptions, price).
+	 * can only override the editable fields (title, descriptions, price, enabled).
+	 *
+	 * Disabled reports are still returned here so the admin catalog editor can
+	 * display them. Customer-facing code paths should use {@see enabled()}.
 	 */
 	public function all(): array {
 		$defaults  = self::defaults();
@@ -149,15 +152,31 @@ final class Catalog {
 			$row['price_cents']       = isset( $override['price_cents'] ) && (int) $override['price_cents'] > 0
 				? (int) $override['price_cents']
 				: $default['price_cents'];
+			// Default to enabled; admins can opt-out per report.
+			$row['enabled']           = array_key_exists( 'enabled', $override )
+				? (bool) $override['enabled']
+				: true;
 			$row['slug']              = $slug;
 			$out[ $slug ]             = $row;
 		}
 		return $out;
 	}
 
+	/**
+	 * Catalog filtered to only enabled reports. Use this for the customer-facing grid.
+	 */
+	public function enabled(): array {
+		return array_filter( $this->all(), static fn( $r ) => ! empty( $r['enabled'] ) );
+	}
+
 	public function get( string $slug ): ?array {
 		$all = $this->all();
 		return $all[ $slug ] ?? null;
+	}
+
+	public function is_enabled( string $slug ): bool {
+		$row = $this->get( $slug );
+		return $row && ! empty( $row['enabled'] );
 	}
 
 	/**
@@ -177,6 +196,10 @@ final class Catalog {
 				'short_description' => sanitize_text_field( wp_unslash( $input[ $slug ]['short_description'] ?? '' ) ),
 				'description'       => wp_kses_post( wp_unslash( $input[ $slug ]['description'] ?? '' ) ),
 				'price_cents'       => max( 0, (int) ( $input[ $slug ]['price_cents'] ?? 0 ) ),
+				// Unchecked checkboxes don't submit, so the form sends a hidden
+				// `enabled_present=1` for every row and we treat absence of
+				// `enabled` as "disabled".
+				'enabled'           => ! empty( $input[ $slug ]['enabled'] ),
 			);
 		}
 		update_option( self::OPTION_KEY, $cleaned, false );

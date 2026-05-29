@@ -197,6 +197,9 @@ final class REST {
 			return new \WP_REST_Response( array( 'valid' => false, 'error' => __( 'Unknown report.', 'cardology-reports' ) ), 400 );
 		}
 
+		if ( empty( $report['enabled'] ) ) {
+			return new \WP_REST_Response( array( 'valid' => false, 'error' => __( 'This report is not currently available.', 'cardology-reports' ) ), 200 );
+		}
 		$promo = $this->stripe->lookup_promotion_code( $code );
 		if ( is_wp_error( $promo ) ) {
 			return new \WP_REST_Response( array( 'valid' => false, 'error' => $promo->get_error_message() ), 200 );
@@ -236,6 +239,9 @@ final class REST {
 		$report = $this->catalog->get( $slug );
 		if ( ! $report ) {
 			return new \WP_REST_Response( array( 'error' => __( 'Unknown report slug.', 'cardology-reports' ) ), 400 );
+		}
+		if ( empty( $report['enabled'] ) ) {
+			return new \WP_REST_Response( array( 'error' => __( 'This report is not currently available.', 'cardology-reports' ) ), 400 );
 		}
 		$customer = self::clean_customer( (array) $req->get_param( 'customer' ) );
 		if ( '' === $customer['name'] || '' === $customer['email'] || '' === $customer['birthdate'] ) {
@@ -319,6 +325,9 @@ final class REST {
 		$report = $this->catalog->get( $slug );
 		if ( ! $report ) {
 			return new \WP_REST_Response( array( 'error' => __( 'Unknown report slug.', 'cardology-reports' ) ), 400 );
+		}
+		if ( empty( $report['enabled'] ) ) {
+			return new \WP_REST_Response( array( 'error' => __( 'This report is not currently available.', 'cardology-reports' ) ), 400 );
 		}
 		$customer = self::clean_customer( (array) $req->get_param( 'customer' ) );
 		if ( '' === $customer['name'] || '' === $customer['email'] || '' === $customer['birthdate'] ) {

@@ -83,7 +83,7 @@ final class Frontend {
 
 	public function shortcode_catalog(): string {
 		$this->enqueue();
-		$reports = $this->catalog->all();
+		$reports = $this->catalog->enabled();
 		ob_start();
 		include CRWP_PLUGIN_DIR . 'templates/front/catalog.php';
 		return (string) ob_get_clean();
@@ -94,6 +94,9 @@ final class Frontend {
 		$report = $this->catalog->get( (string) $atts['slug'] );
 		if ( ! $report ) {
 			return '<p>' . esc_html__( 'Unknown report.', 'cardology-reports' ) . '</p>';
+		}
+		if ( empty( $report['enabled'] ) ) {
+			return '<p>' . esc_html__( 'This report is not currently available.', 'cardology-reports' ) . '</p>';
 		}
 		$this->enqueue();
 		ob_start();
