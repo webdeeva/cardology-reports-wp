@@ -27,6 +27,7 @@ final class Admin {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'maybe_save_catalog' ) );
+		add_action( 'admin_init', array( $this, 'maybe_run_bulk_action' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'admin_notices', array( $this, 'render_settings_notices' ) );
 	}
@@ -176,11 +177,97 @@ final class Admin {
 	}
 
 	public function render_settings_notices(): void {
-		if ( isset( $_GET['page'] ) && $_GET['page'] === self::MENU_SLUG . '-catalog'
-			&& isset( $_GET['crwp_saved'] ) && '1' === $_GET['crwp_saved'] ) {
+		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== self::MENU_SLUG . '-catalog' ) {
+			return;
+		}
+		if ( isset( $_GET['crwp_saved'] ) && '1' === $_GET['crwp_saved'] ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' .
 				esc_html__( 'Reports catalog saved.', 'cardology-reports' ) . '</p></div>';
 		}
+		if ( isset( $_GET['crwp_bulk'] ) ) {
+			$action = sanitize_key( $_GET['crwp_bulk'] );
+			$count  = isset( $_GET['count'] ) ? (int) $_GET['count'] : 0;
+			$msg    = '';
+			switch ( $action ) {
+				case 'sale':
+					$msg = sprintf(
+						/* translators: %d count of reports */
+						_n( 'Sale price applied to %d report.', 'Sale price applied to %d reports.', $count, 'cardology-reports' ),
+						$count
+					);
+					break;
+				case 'clear-sales':
+					$msg = sprintf(
+						/* translators: %d count of reports */
+						_n( 'Cleared the sale on %d report.', 'Cleared the sale on %d reports.', $count, 'cardology-reports' ),
+						$count
+					);
+					break;
+				case 'enable-all':
+					$msg = sprintf(
+						/* translators: %d count of reports */
+						_n( 'Enabled %d report.', 'Enabled %d reports.', $count, 'cardology-reports' ),
+						$count
+					);
+					break;
+				case 'disable-all':
+					$msg = sprintf(
+						/* translators: %d count of reports */
+						_n( 'Disabled %d report.', 'Disabled %d reports.', $count, 'cardology-reports' ),
+						$count
+					);
+					break;
+			}
+			if ( '' !== $msg ) {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $msg ) . '</p></div>';
+			}
+		}
+	}
+
+	/* -------------------- Catalog bulk actions -------------------- */
+
+	public function maybe_run_bulk_action(): void {
+		if ( ! isset( $_POST['crwp_bulk_action'] ) ) {
+			return;
+		}
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'You do not have permission to edit settings.', 'cardology-reports' ) );
+		}
+		check_admin_referer( 'crwp_bulk_action', 'crwp_bulk_nonce' );
+
+		$action = sanitize_key( wp_unslash( $_POST['crwp_bulk_action'] ) );
+		$count  = 0;
+		switch ( $action ) {
+			case 'sale':
+				$percent = isset( $_POST['crwp_bulk_percent'] ) ? (float) wp_unslash( $_POST['crwp_bulk_percent'] ) : 0;
+				$start   = isset( $_POST['crwp_bulk_start'] ) ? sanitize_text_field( wp_unslash( $_POST['crwp_bulk_start'] ) ) : '';
+				$end     = isset( $_POST['crwp_bulk_end'] ) ? sanitize_text_field( wp_unslash( $_POST['crwp_bulk_end'] ) ) : '';
+				$count   = $this->catalog->bulk_apply_sale_percent( $percent, $start, $end );
+				break;
+			case 'clear-sales':
+				$count = $this->catalog->bulk_clear_sales();
+				break;
+			case 'enable-all':
+				$count = $this->catalog->bulk_set_enabled( true );
+				break;
+			case 'disable-all':
+				$count = $this->catalog->bulk_set_enabled( false );
+				break;
+			default:
+				return;
+		}
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'      => self::MENU_SLUG . '-catalog',
+					'crwp_bulk' => $action,
+					'count'     => $count,
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
 	}
 
 	/* -------------------- Catalog save -------------------- */

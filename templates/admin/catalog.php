@@ -11,6 +11,58 @@ defined( 'ABSPATH' ) || exit;
 	<h1><?php echo esc_html__( 'Reports Catalog', 'cardology-reports' ); ?></h1>
 	<p><?php echo esc_html__( 'Edit the customer-facing name, description, and price for each report. Slugs and required fields are fixed by the upstream Report Writer API and cannot be changed here.', 'cardology-reports' ); ?></p>
 
+	<div class="crwp-admin__panel crwp-admin__panel--bulk">
+		<h2><?php echo esc_html__( 'Bulk Actions', 'cardology-reports' ); ?></h2>
+		<form method="post" action="" class="crwp-bulk-grid">
+			<?php wp_nonce_field( 'crwp_bulk_action', 'crwp_bulk_nonce' ); ?>
+
+			<fieldset class="crwp-bulk-card">
+				<legend><?php echo esc_html__( 'Apply % off to all', 'cardology-reports' ); ?></legend>
+				<div class="crwp-bulk-row">
+					<label>
+						<?php echo esc_html__( 'Percent off', 'cardology-reports' ); ?>
+						<input type="number" min="1" max="99" step="0.1" name="crwp_bulk_percent" placeholder="20" required />
+					</label>
+				</div>
+				<div class="crwp-bulk-row">
+					<label>
+						<?php echo esc_html__( 'Starts (optional)', 'cardology-reports' ); ?>
+						<input type="date" name="crwp_bulk_start" />
+					</label>
+					<label>
+						<?php echo esc_html__( 'Ends (optional)', 'cardology-reports' ); ?>
+						<input type="date" name="crwp_bulk_end" />
+					</label>
+				</div>
+				<p>
+					<button type="submit" name="crwp_bulk_action" value="sale" class="button button-primary">
+						<?php echo esc_html__( 'Apply sale to all reports', 'cardology-reports' ); ?>
+					</button>
+				</p>
+				<p class="description">
+					<?php echo esc_html__( 'Sets the sale price on every enabled report by rounding to the nearest cent. Reports where the resulting price falls below Stripe’s 50¢ floor are skipped.', 'cardology-reports' ); ?>
+				</p>
+			</fieldset>
+
+			<fieldset class="crwp-bulk-card">
+				<legend><?php echo esc_html__( 'Other bulk actions', 'cardology-reports' ); ?></legend>
+				<p>
+					<button type="submit" name="crwp_bulk_action" value="clear-sales" class="button" onclick="return confirm('<?php echo esc_js( __( 'Remove the sale price from every report?', 'cardology-reports' ) ); ?>');">
+						<?php echo esc_html__( 'Clear all sale prices', 'cardology-reports' ); ?>
+					</button>
+				</p>
+				<p>
+					<button type="submit" name="crwp_bulk_action" value="enable-all" class="button">
+						<?php echo esc_html__( 'Enable all reports', 'cardology-reports' ); ?>
+					</button>
+					<button type="submit" name="crwp_bulk_action" value="disable-all" class="button" onclick="return confirm('<?php echo esc_js( __( 'Hide every report from the catalog?', 'cardology-reports' ) ); ?>');">
+						<?php echo esc_html__( 'Disable all reports', 'cardology-reports' ); ?>
+					</button>
+				</p>
+			</fieldset>
+		</form>
+	</div>
+
 	<form method="post" action="">
 		<?php wp_nonce_field( 'crwp_catalog_save', 'crwp_catalog_nonce' ); ?>
 		<input type="hidden" name="crwp_catalog_save" value="1" />

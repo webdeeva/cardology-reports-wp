@@ -85,6 +85,15 @@ final class REST {
 		);
 		register_rest_route(
 			self::NS,
+			'/catalog',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'catalog_list' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/webhook',
 			array(
 				'methods'             => 'POST',
@@ -174,14 +183,51 @@ final class REST {
 	}
 
 	private function shape_status( array $order ): array {
-		return array(
+		$report = $this->catalog->get( $order['report_slug'] );
+		$out    = array(
 			'status'      => $order['status'],
 			'reportSlug'  => $order['report_slug'],
 			'reportUrl'   => $order['report_url'] ?: null,
 			'emailSent'   => ! empty( $order['email_sent_at'] ),
 			'completedAt' => $order['completed_at'] ?? null,
 			'createdAt'   => $order['created_at'] ?? null,
+			'amountPaidCents' => isset( $order['amount_cents'] ) ? (int) $order['amount_cents'] : null,
 		);
+		if ( $report ) {
+			$out['reportTitle']               = $report['title'];
+			$out['reportPriceCents']          = (int) $report['price_cents'];
+			$out['reportSalePriceCents']      = (int) $report['sale_price_cents'];
+			$out['reportOnSale']              = (bool) $report['on_sale'];
+			$out['reportEffectivePriceCents'] = (int) $report['effective_price_cents'];
+		}
+		return $out;
+	}
+
+	/**
+	 * Public catalog listing — for dashboards, headless frontends, embeds, etc.
+	 * Returns only enabled reports and only the display-safe fields.
+	 */
+	public function catalog_list(): \WP_REST_Response {
+		$items = array();
+		foreach ( $this->catalog->enabled() as $slug => $row ) {
+			$items[] = array(
+				'slug'                    => $slug,
+				'title'                   => $row['title'],
+				'shortDescription'        => $row['short_description'],
+				'description'             => $row['description'],
+				'priceCents'              => (int) $row['price_cents'],
+				'salePriceCents'          => (int) $row['sale_price_cents'],
+				'onSale'                  => (bool) $row['on_sale'],
+				'effectivePriceCents'     => (int) $row['effective_price_cents'],
+				'saleStartDate'           => $row['sale_start_date'] ?: null,
+				'saleEndDate'             => $row['sale_end_date'] ?: null,
+				'requiresPartner'         => (bool) $row['requires_partner'],
+				'requiresBirthTimeAndPlace' => (bool) $row['requires_birth_time_and_place'],
+				'supportsAge'             => (bool) $row['supports_age'],
+				'estimatedMinutes'        => (int) $row['estimated_minutes'],
+			);
+		}
+		return new \WP_REST_Response( array( 'items' => $items ), 200 );
 	}
 
 	/* -------------------- Endpoints -------------------- */

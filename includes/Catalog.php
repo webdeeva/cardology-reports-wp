@@ -278,4 +278,73 @@ final class Catalog {
 			add_option( self::OPTION_KEY, array(), '', false );
 		}
 	}
+
+	/**
+	 * Bulk operations exposed to the admin. Each one mutates the override option
+	 * in-place and returns the count of affected reports.
+	 */
+	public function bulk_apply_sale_percent( float $percent_off, string $start_date = '', string $end_date = '' ): int {
+		if ( $percent_off <= 0 || $percent_off >= 100 ) {
+			return 0;
+		}
+		$overrides = $this->get_raw_overrides();
+		$count     = 0;
+		foreach ( $this->all() as $slug => $row ) {
+			$regular   = (int) $row['price_cents'];
+			$sale      = (int) round( $regular * ( 1 - $percent_off / 100 ) );
+			if ( $sale < 50 || $sale >= $regular ) {
+				continue;
+			}
+			$overrides[ $slug ] = array_merge(
+				$overrides[ $slug ] ?? array(),
+				array(
+					'sale_price_cents' => $sale,
+					'sale_start_date'  => preg_match( '/^\d{4}-\d{2}-\d{2}$/', $start_date ) ? $start_date : '',
+					'sale_end_date'    => preg_match( '/^\d{4}-\d{2}-\d{2}$/', $end_date ) ? $end_date : '',
+				)
+			);
+			$count++;
+		}
+		update_option( self::OPTION_KEY, $overrides, false );
+		return $count;
+	}
+
+	public function bulk_clear_sales(): int {
+		$overrides = $this->get_raw_overrides();
+		$count     = 0;
+		foreach ( $overrides as $slug => $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			$was_on_sale = ! empty( $row['sale_price_cents'] );
+			$overrides[ $slug ]['sale_price_cents'] = 0;
+			$overrides[ $slug ]['sale_start_date']  = '';
+			$overrides[ $slug ]['sale_end_date']    = '';
+			if ( $was_on_sale ) {
+				$count++;
+			}
+		}
+		update_option( self::OPTION_KEY, $overrides, false );
+		return $count;
+	}
+
+	public function bulk_set_enabled( bool $enabled ): int {
+		$overrides = $this->get_raw_overrides();
+		$count     = 0;
+		foreach ( self::defaults() as $slug => $_default ) {
+			$current = $overrides[ $slug ]['enabled'] ?? true;
+			if ( (bool) $current !== $enabled ) {
+				$overrides[ $slug ]              = $overrides[ $slug ] ?? array();
+				$overrides[ $slug ]['enabled']   = $enabled;
+				$count++;
+			}
+		}
+		update_option( self::OPTION_KEY, $overrides, false );
+		return $count;
+	}
+
+	private function get_raw_overrides(): array {
+		$o = get_option( self::OPTION_KEY, array() );
+		return is_array( $o ) ? $o : array();
+	}
 }
