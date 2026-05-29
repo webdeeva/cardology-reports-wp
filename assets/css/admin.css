@@ -1,0 +1,20 @@
+.crwp-admin__panel {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	padding: 1rem 1.25rem;
+	margin: 1rem 0;
+	border-radius: 4px;
+}
+.crwp-admin__panel h2 {
+	margin-top: 0;
+}
+.crwp-pill {
+	display: inline-block;
+	background: #f0f6fc;
+	border: 1px solid #c3c4c7;
+	border-radius: 999px;
+	padding: 0.1rem 0.55rem;
+	font-size: 0.78rem;
+	margin-right: 0.25rem;
+	color: #1d2327;
+}
