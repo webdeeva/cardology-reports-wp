@@ -81,6 +81,13 @@ final class Admin {
 			array(),
 			CRWP_VERSION
 		);
+		wp_enqueue_script(
+			'crwp-admin',
+			CRWP_PLUGIN_URL . 'assets/js/admin.js',
+			array(),
+			CRWP_VERSION,
+			true
+		);
 	}
 
 	/* -------------------- Settings API -------------------- */

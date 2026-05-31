@@ -106,7 +106,8 @@
 	transform: translateY(-1px);
 }
 
-.crwp-swatch.is-active {
+.crwp-swatch.is-active,
+.crwp-swatch:has(input[type="radio"]:checked) {
 	border-color: #2271b1;
 	box-shadow: 0 0 0 3px rgba(34, 113, 177, 0.15);
 }
