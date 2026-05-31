@@ -338,7 +338,7 @@ final class Admin {
 		}
 		$stripe     = ( new Stripe_Client() )->settings();
 		$report     = ( new Report_Writer_Client() )->settings();
-		$email      = ( new Mailer() )->settings();
+		$email      = ( new Mailer( $this->appearance ) )->settings();
 		$appearance = $this->appearance->settings();
 		$presets    = Appearance::presets();
 		$tokens     = Appearance::TOKENS;
