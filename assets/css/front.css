@@ -50,96 +50,243 @@
 
 .crwp-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	gap: 1.25rem;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.75rem;
 	margin-top: 1.5rem;
 }
 
+/* ---------- Ornate report-cover card ---------- *
+ * Ported from the cosmic-cardology site. Every colour is derived from the
+ * appearance tokens, so the cover re-skins with whatever preset the admin
+ * picks. `color-mix` produces the soft "gold-leaf" tints from --crwp-accent;
+ * the solid values declared just before each color-mix are graceful fallbacks
+ * for browsers without color-mix support.
+ */
 .crwp-card {
-	background: var(--crwp-card-bg);
-	border: 1px solid var(--crwp-border);
-	border-radius: var(--crwp-radius);
-	padding: 1.25rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	transition: border-color 0.2s ease, transform 0.2s ease;
+	display: block;
 }
 
-.crwp-card:hover {
-	border-color: var(--crwp-accent);
-	transform: translateY(-2px);
+/* Outer ornamental "gold-leaf" double border. */
+.crwp-card__frame {
+	position: relative;
+	border-radius: 14px;
+	padding: 1.5px;
+	background: var(--crwp-border);
+	background: linear-gradient(
+		to bottom,
+		color-mix(in srgb, var(--crwp-accent) 55%, transparent),
+		color-mix(in srgb, var(--crwp-accent) 14%, transparent),
+		color-mix(in srgb, var(--crwp-accent) 45%, transparent)
+	);
+	box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.crwp-card:hover .crwp-card__frame {
+	transform: translateY(-4px);
+	box-shadow: 0 18px 38px -14px rgba(0, 0, 0, 0.55);
+}
+
+.crwp-card__inner {
+	position: relative;
+	border-radius: 12px;
+	background: var(--crwp-card-bg);
+	overflow: hidden;
+}
+
+/* Inner hairline rule, inset from the edge. */
+.crwp-card__hairline {
+	position: absolute;
+	inset: 10px;
+	border-radius: 8px;
+	border: 1px solid var(--crwp-border);
+	border: 1px solid color-mix(in srgb, var(--crwp-accent) 22%, transparent);
+	pointer-events: none;
+}
+
+/* Decorative corner flourishes. */
+.crwp-card__corner {
+	position: absolute;
+	color: var(--crwp-accent);
+	opacity: 0.55;
+	line-height: 0;
+	pointer-events: none;
+}
+
+.crwp-card__corner--tl { top: 12px; left: 12px; }
+.crwp-card__corner--tr { top: 12px; right: 12px; transform: rotate(90deg); }
+.crwp-card__corner--bl { bottom: 12px; left: 12px; transform: rotate(-90deg); }
+.crwp-card__corner--br { bottom: 12px; right: 12px; transform: rotate(180deg); }
+
+.crwp-card__body {
+	position: relative;
+	padding: 2.5rem 1.75rem 1.75rem;
+	min-height: 440px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+/* Document emblem (replaces the brand logo) with a soft halo. */
+.crwp-card__emblem {
+	position: relative;
+	margin-bottom: 1.25rem;
+	color: var(--crwp-accent);
+}
+
+.crwp-card__halo {
+	position: absolute;
+	inset: -12px;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--crwp-accent) 16%, transparent);
+	filter: blur(14px);
+}
+
+.crwp-card__doc {
+	position: relative;
+	width: 56px;
+	height: 56px;
+	display: block;
+	filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--crwp-accent) 30%, transparent));
+}
+
+/* Ornate divider: hairline — ✦ — gem — ✦ — hairline. */
+.crwp-card__divider {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	max-width: 15rem;
+	margin-bottom: 1.25rem;
+	color: var(--crwp-accent);
+}
+
+.crwp-card__divider-line {
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(to right, transparent, color-mix(in srgb, var(--crwp-accent) 60%, transparent));
+}
+
+.crwp-card__divider-line:last-child {
+	background: linear-gradient(to left, transparent, color-mix(in srgb, var(--crwp-accent) 60%, transparent));
+}
+
+.crwp-card__divider-star {
+	margin: 0 0.5rem;
+	font-size: 0.7rem;
+	opacity: 0.8;
+}
+
+.crwp-card__divider-gem {
+	width: 7px;
+	height: 7px;
+	transform: rotate(45deg);
+	border: 1px solid color-mix(in srgb, var(--crwp-accent) 70%, transparent);
 }
 
 .crwp-card__title {
 	color: var(--crwp-text);
-	font-size: 1.15rem;
-	margin: 0;
-	line-height: 1.3;
+	font-size: 1.4rem;
+	line-height: 1.2;
+	letter-spacing: 0.01em;
+	margin: 0 0 0.4rem;
+}
+
+.crwp-card__kicker {
+	font-size: 0.68rem;
+	text-transform: uppercase;
+	letter-spacing: 0.25em;
+	color: var(--crwp-accent);
+	color: color-mix(in srgb, var(--crwp-accent) 80%, var(--crwp-text-muted));
+	margin: 0 0 1rem;
 }
 
 .crwp-card__desc {
 	color: var(--crwp-text-muted);
-	font-size: 0.92rem;
-	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.6;
+	margin: 0 0 1.25rem;
+	max-width: 18rem;
 }
 
 .crwp-card__tags {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.35rem;
+	justify-content: center;
+	gap: 0.4rem;
+	margin-bottom: 1.5rem;
+	min-height: 24px;
 }
 
 .crwp-tag {
-	font-size: 0.65rem;
+	font-size: 0.62rem;
 	text-transform: uppercase;
 	letter-spacing: 0.18em;
 	color: var(--crwp-accent);
 	background: var(--crwp-accent-soft);
 	border: 1px solid var(--crwp-border);
-	padding: 0.15rem 0.5rem;
+	border: 1px solid color-mix(in srgb, var(--crwp-accent) 30%, transparent);
+	padding: 0.15rem 0.55rem;
 	border-radius: 999px;
 }
 
 .crwp-card__footer {
 	margin-top: auto;
+	width: 100%;
 	display: flex;
-	justify-content: space-between;
+	flex-direction: column;
 	align-items: center;
-	gap: 0.75rem;
-	flex-wrap: wrap;
+	gap: 1rem;
+	padding-top: 0.5rem;
 }
 
-.crwp-price {
-	color: var(--crwp-accent);
-	font-weight: 700;
-	font-size: 1.15rem;
+.crwp-card__price {
 	display: inline-flex;
-	align-items: baseline;
-	gap: 0.4rem;
+	align-items: center;
+	gap: 0.5rem;
 }
 
-.crwp-price__strike {
+.crwp-card__price-strike {
 	color: var(--crwp-text-muted);
 	text-decoration: line-through;
+	font-size: 0.85rem;
 	font-weight: 500;
-	font-size: 0.9em;
 }
 
-.crwp-price__sale {
-	color: var(--crwp-accent);
+/* Gold price "seal" pill. */
+.crwp-card__seal {
+	position: relative;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.1rem;
+	padding: 0.35rem 1.1rem;
+	border-radius: 999px;
+	background: var(--crwp-btn-bg);
+	background: linear-gradient(to bottom, var(--crwp-btn-bg), var(--crwp-btn-bg-hover));
+	color: var(--crwp-btn-text);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.crwp-card__seal-cur {
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.crwp-card__seal-amt {
+	font-size: 1.5rem;
 	font-weight: 700;
+	line-height: 1;
 }
 
-.crwp-price__badge {
-	font-size: 0.6rem;
+.crwp-card__sale-badge {
+	font-size: 0.58rem;
 	font-weight: 700;
 	letter-spacing: 0.15em;
-	background: var(--crwp-accent);
-	color: var(--crwp-btn-text);
-	padding: 0.1rem 0.45rem;
-	border-radius: 999px;
 	text-transform: uppercase;
+	color: var(--crwp-btn-text);
+	background: var(--crwp-accent);
+	padding: 0.15rem 0.45rem;
+	border-radius: 999px;
 }
 
 .crwp-btn {
@@ -165,6 +312,34 @@
 .crwp-btn--primary:hover {
 	background: var(--crwp-btn-bg-hover);
 	color: var(--crwp-btn-text);
+}
+
+/* Ghost CTA used on the report cover — fills with the accent on hover. */
+.crwp-btn--cover {
+	background: transparent;
+	color: var(--crwp-accent);
+	border-color: var(--crwp-border);
+	border-color: color-mix(in srgb, var(--crwp-accent) 40%, transparent);
+	border-radius: 999px;
+	padding: 0.55rem 1.4rem;
+	letter-spacing: 0.02em;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.crwp-btn--cover:hover {
+	background: var(--crwp-accent);
+	color: var(--crwp-btn-text);
+	border-color: var(--crwp-accent);
+}
+
+.crwp-btn--cover .crwp-btn__arrow {
+	transition: transform 0.2s ease;
+}
+
+.crwp-btn--cover:hover .crwp-btn__arrow {
+	transform: translateX(3px);
 }
 
 .crwp-btn--block {
