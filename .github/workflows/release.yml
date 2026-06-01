@@ -68,6 +68,8 @@ jobs:
             --exclude='.github/' \
             --exclude='.gitignore' \
             --exclude='.DS_Store' \
+            --exclude='.wp-env.json' \
+            --exclude='.wp-env.override.json' \
             --exclude='README.md' \
             --exclude='node_modules/' \
             --exclude='vendor/' \

@@ -56,6 +56,9 @@ final class Plugin {
 		$this->rest->register_hooks();
 		$this->frontend->register_hooks();
 
+		// GitHub-backed auto-updates (runs in admin + wp-cron update checks).
+		( new Updater( CRWP_PLUGIN_FILE ) )->register_hooks();
+
 		if ( is_admin() ) {
 			$this->admin = new Admin\Admin( $this->catalog, $this->appearance );
 			$this->admin->register_hooks();
