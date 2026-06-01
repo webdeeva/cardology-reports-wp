@@ -4,7 +4,7 @@ Tags:              cardology, reports, stripe, payments, ecommerce
 Requires at least: 6.4
 Tested up to:      6.7
 Requires PHP:      8.0
-Stable tag:        1.0.0
+Stable tag:        1.0.1
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,14 @@ By the external Report Writer API (https://report-writer-qt7cc.ondigitalocean.ap
 Yes. Use **Cardology Reports → Reports Catalog**.
 
 == Changelog ==
+
+= 1.0.1 =
+* Auto-create the Catalog and Report Status pages on install/upgrade and store them in settings, so the post-payment redirect always has a valid destination.
+* Existing installs self-heal on update (no reactivation needed).
+* Add an admin warning when no Status page is configured.
+* Redesign the catalog cards as ornate report covers (document emblem, themed via appearance presets).
+* Fix a fatal on the Settings screen and make appearance swatch selection update live.
+* Add GitHub Releases-backed auto-updates.
 
 = 1.0.0 =
 * Initial release.

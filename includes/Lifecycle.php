@@ -8,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Lifecycle {
 
-	public const DB_VERSION = '1';
+	public const DB_VERSION = '2';
 
 	/**
 	 * Runs once on plugin activation.
@@ -16,6 +16,7 @@ final class Lifecycle {
 	public static function activate(): void {
 		self::install_schema();
 		Catalog::seed_defaults_if_missing();
+		self::ensure_pages();
 
 		// Schedule the polling cron if not already.
 		if ( ! wp_next_scheduled( 'crwp_poll_pending_reports' ) ) {
@@ -44,7 +45,78 @@ final class Lifecycle {
 		if ( version_compare( $current, self::DB_VERSION, '<' ) ) {
 			self::install_schema();
 			Catalog::seed_defaults_if_missing();
+			self::ensure_pages();
 			update_option( 'crwp_db_version', self::DB_VERSION );
+		}
+	}
+
+	/**
+	 * Make sure the customer-facing catalog and status pages exist and are
+	 * recorded in the settings. Without a stored status page the post-payment
+	 * redirect falls back to the site home, which both loses the status view
+	 * and can trip host WAFs (e.g. ModSecurity) on the bare ?session_id URL.
+	 *
+	 * Runs on activation and on the v1 -> v2 upgrade so existing installs heal
+	 * themselves after updating.
+	 */
+	private static function ensure_pages(): void {
+		self::ensure_page( 'crwp_catalog_page_id', __( 'Cardology Reports', 'cardology-reports' ), '[cardology_reports]' );
+		self::ensure_page( 'crwp_status_page_id', __( 'Report Status', 'cardology-reports' ), '[cardology_report_status]' );
+	}
+
+	/**
+	 * Ensure a single shortcode-backed page exists and its ID is stored.
+	 *
+	 * @param string $option    Option key that stores the page ID.
+	 * @param string $title     Title for a newly created page.
+	 * @param string $shortcode Shortcode the page must contain.
+	 */
+	private static function ensure_page( string $option, string $title, string $shortcode ): void {
+		// Already configured with a live page? Leave it alone.
+		$existing = (int) get_option( $option, 0 );
+		if ( $existing > 0 && 'page' === get_post_type( $existing ) ) {
+			$status = get_post_status( $existing );
+			if ( $status && 'trash' !== $status ) {
+				return;
+			}
+		}
+
+		// Reuse an existing page that already holds the shortcode, if any.
+		$page_id    = 0;
+		$candidates = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => array( 'publish', 'draft', 'pending', 'private' ),
+				'numberposts'      => 5,
+				's'                => $shortcode,
+				'fields'           => 'ids',
+				'suppress_filters' => true,
+			)
+		);
+		foreach ( $candidates as $candidate_id ) {
+			if ( false !== strpos( (string) get_post_field( 'post_content', $candidate_id ), $shortcode ) ) {
+				$page_id = (int) $candidate_id;
+				break;
+			}
+		}
+
+		// Otherwise create it.
+		if ( 0 === $page_id ) {
+			$result = wp_insert_post(
+				array(
+					'post_title'   => $title,
+					'post_content' => $shortcode,
+					'post_status'  => 'publish',
+					'post_type'    => 'page',
+				)
+			);
+			if ( $result && ! is_wp_error( $result ) ) {
+				$page_id = (int) $result;
+			}
+		}
+
+		if ( $page_id > 0 ) {
+			update_option( $option, $page_id );
 		}
 	}
 

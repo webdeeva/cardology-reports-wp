@@ -33,6 +33,27 @@ final class Admin {
 		add_action( 'admin_init', array( $this, 'maybe_run_bulk_action' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'admin_notices', array( $this, 'render_settings_notices' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_warn_missing_status_page' ) );
+	}
+
+	/**
+	 * Warn on plugin screens if no status page is configured. Without one the
+	 * post-payment redirect falls back to the site home, breaking the buyer's
+	 * "your report is generating" view (and tripping some host WAFs).
+	 */
+	public function maybe_warn_missing_status_page(): void {
+		if ( ! isset( $_GET['page'] ) || strpos( sanitize_key( wp_unslash( $_GET['page'] ) ), self::MENU_SLUG ) !== 0 ) {
+			return;
+		}
+		$page_id = (int) get_option( 'crwp_status_page_id', 0 );
+		if ( $page_id > 0 && 'publish' === get_post_status( $page_id ) ) {
+			return;
+		}
+		$settings_url = admin_url( 'admin.php?page=' . self::MENU_SLUG . '-settings&tab=pages' );
+		echo '<div class="notice notice-error"><p><strong>' .
+			esc_html__( 'Cardology Reports: no Status page is set.', 'cardology-reports' ) . '</strong> ' .
+			esc_html__( 'Customers will be redirected to your site home after paying instead of seeing their report status. Choose (or create) a page containing the [cardology_report_status] shortcode under', 'cardology-reports' ) .
+			' <a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Settings → Pages', 'cardology-reports' ) . '</a>.</p></div>';
 	}
 
 	public function register_menu(): void {
