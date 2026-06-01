@@ -60,7 +60,7 @@ final class Plugin {
 		( new Updater( CRWP_PLUGIN_FILE ) )->register_hooks();
 
 		if ( is_admin() ) {
-			$this->admin = new Admin\Admin( $this->catalog, $this->appearance );
+			$this->admin = new Admin\Admin( $this->catalog, $this->appearance, $this->orders );
 			$this->admin->register_hooks();
 		}
 	}

@@ -28,6 +28,8 @@ final class Mailer {
 			'from_name'       => get_bloginfo( 'name' ),
 			'from_email_mode' => self::FROM_MODE_NOREPLY,
 			'from_email'      => '',
+			'notify_owner'    => 1,
+			'notify_email'    => '',
 		);
 		$saved    = get_option( self::SETTINGS_KEY, array() );
 		if ( ! is_array( $saved ) ) {
@@ -96,6 +98,54 @@ final class Mailer {
 			)
 		);
 		return (bool) wp_mail( $order['customer_email'], $subject, $body, $this->headers() );
+	}
+
+	/**
+	 * Where owner/sale notifications are delivered. Falls back to the WP admin
+	 * email when no dedicated address is set.
+	 */
+	public function notify_recipient(): string {
+		$email = sanitize_email( (string) ( $this->settings()['notify_email'] ?? '' ) );
+		return '' !== $email ? $email : (string) get_option( 'admin_email' );
+	}
+
+	/**
+	 * Notify the site owner that a sale happened. Reply-To is set to the
+	 * customer so the owner can respond directly. No-op when disabled.
+	 *
+	 * @param array<string,mixed> $order Keys: customer_name, customer_email, report_title, amount_cents.
+	 */
+	public function send_owner_sale_notification( array $order ): bool {
+		if ( empty( $this->settings()['notify_owner'] ) ) {
+			return false;
+		}
+		$to = $this->notify_recipient();
+		if ( '' === $to ) {
+			return false;
+		}
+
+		$subject = sprintf(
+			/* translators: %s report title */
+			__( 'New report sale: %s', 'cardology-reports' ),
+			$order['report_title']
+		);
+		$body = $this->render_template(
+			'owner-sale',
+			array(
+				'order'     => $order,
+				'palette'   => $this->appearance->email_palette(),
+				'site_name' => get_bloginfo( 'name' ),
+				'site_url'  => home_url(),
+				'admin_url' => admin_url( 'admin.php?page=cardology-reports-customers' ),
+			)
+		);
+
+		$headers = $this->headers();
+		if ( ! empty( $order['customer_email'] ) ) {
+			$headers[] = sprintf( 'Reply-To: %s <%s>', $order['customer_name'] ?? '', $order['customer_email'] );
+		}
+
+		return (bool) wp_mail( $to, $subject, $body, $headers );
 	}
 
 	public function send_report_ready( array $order, string $report_url ): bool {

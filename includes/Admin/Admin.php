@@ -3,6 +3,7 @@ namespace CRWP\Admin;
 
 use CRWP\Catalog;
 use CRWP\Appearance;
+use CRWP\Orders;
 use CRWP\Stripe_Client;
 use CRWP\Report_Writer_Client;
 use CRWP\Mailer;
@@ -20,10 +21,12 @@ final class Admin {
 
 	private Catalog $catalog;
 	private Appearance $appearance;
+	private Orders $orders;
 
-	public function __construct( Catalog $catalog, Appearance $appearance ) {
+	public function __construct( Catalog $catalog, Appearance $appearance, Orders $orders ) {
 		$this->catalog    = $catalog;
 		$this->appearance = $appearance;
+		$this->orders     = $orders;
 	}
 
 	public function register_hooks(): void {
@@ -84,12 +87,38 @@ final class Admin {
 		);
 		add_submenu_page(
 			self::MENU_SLUG,
+			__( 'Customers', 'cardology-reports' ),
+			__( 'Customers', 'cardology-reports' ),
+			self::CAP,
+			self::MENU_SLUG . '-customers',
+			array( $this, 'render_customers' )
+		);
+		add_submenu_page(
+			self::MENU_SLUG,
 			__( 'Settings', 'cardology-reports' ),
 			__( 'Settings', 'cardology-reports' ),
 			self::CAP,
 			self::MENU_SLUG . '-settings',
 			array( $this, 'render_settings' )
 		);
+	}
+
+	public function render_customers(): void {
+		if ( ! current_user_can( self::CAP ) ) {
+			return;
+		}
+
+		$per_page = 25;
+		$paged    = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
+		$search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+
+		$total    = $this->orders->count( $search );
+		$totals   = $this->orders->totals();
+		$orders   = $this->orders->paged( $per_page, ( $paged - 1 ) * $per_page, $search );
+		$catalog  = $this->catalog->all();
+		$pages    = max( 1, (int) ceil( $total / $per_page ) );
+
+		include CRWP_PLUGIN_DIR . 'templates/admin/customers.php';
 	}
 
 	public function enqueue_admin_assets( string $hook ): void {
@@ -224,6 +253,8 @@ final class Admin {
 			'from_name'       => sanitize_text_field( $input['from_name'] ?? get_bloginfo( 'name' ) ),
 			'from_email_mode' => $mode,
 			'from_email'      => sanitize_email( $input['from_email'] ?? '' ),
+			'notify_owner'    => empty( $input['notify_owner'] ) ? 0 : 1,
+			'notify_email'    => sanitize_email( $input['notify_email'] ?? '' ),
 		);
 	}
 

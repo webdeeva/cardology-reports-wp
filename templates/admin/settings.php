@@ -125,6 +125,21 @@ $tabs        = array(
 						</fieldset>
 					</td>
 				</tr>
+				<tr><th scope="row"><?php echo esc_html__( 'Sale notifications', 'cardology-reports' ); ?></th>
+					<td>
+						<label style="display:block;margin-bottom:0.6rem;">
+							<input type="checkbox" name="crwp_email_settings[notify_owner]" value="1" <?php checked( ! empty( $email['notify_owner'] ) ); ?> />
+							<?php echo esc_html__( 'Email me whenever a report is sold (customer name, email, and report).', 'cardology-reports' ); ?>
+						</label>
+						<input class="regular-text" type="email" name="crwp_email_settings[notify_email]" value="<?php echo esc_attr( $email['notify_email'] ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
+						<p class="description">
+							<?php
+							/* translators: %s admin email address */
+							printf( esc_html__( 'Where to send sale notifications. Leave blank to use the site admin email (%s).', 'cardology-reports' ), '<code>' . esc_html( get_option( 'admin_email' ) ) . '</code>' );
+							?>
+						</p>
+					</td>
+				</tr>
 			</table>
 			<p class="description">
 				<?php echo esc_html__( 'Emails are sent via wp_mail(). The styled header uses your selected appearance theme automatically. Install an SMTP plugin (WP Mail SMTP, Postmark, Resend-WP, etc.) for reliable deliverability of no-reply addresses.', 'cardology-reports' ); ?>

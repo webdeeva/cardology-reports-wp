@@ -453,16 +453,15 @@ final class REST {
 			)
 		);
 
-		// Confirmation email (best-effort).
-		$this->mailer->send_order_received(
-			array(
-				'customer_name'  => $customer['name'],
-				'customer_email' => $customer['email'],
-				'report_title'   => $report['title'],
-				'amount_cents'   => 0,
-			),
-			$this->status_url( $session_id )
+		// Confirmation email + owner notification (best-effort).
+		$order_summary = array(
+			'customer_name'  => $customer['name'],
+			'customer_email' => $customer['email'],
+			'report_title'   => $report['title'],
+			'amount_cents'   => 0,
 		);
+		$this->mailer->send_order_received( $order_summary, $this->status_url( $session_id ) );
+		$this->mailer->send_owner_sale_notification( $order_summary );
 
 		return new \WP_REST_Response( array( 'sessionId' => $session_id ), 200 );
 	}
@@ -623,16 +622,15 @@ final class REST {
 			)
 		);
 
-		// Order-received email.
-		$this->mailer->send_order_received(
-			array(
-				'customer_name'  => $customer['name'],
-				'customer_email' => $customer['email'],
-				'report_title'   => $report['title'],
-				'amount_cents'   => $amount,
-			),
-			$this->status_url( $session_id )
+		// Order-received email + owner sale notification.
+		$order_summary = array(
+			'customer_name'  => $customer['name'],
+			'customer_email' => $customer['email'],
+			'report_title'   => $report['title'],
+			'amount_cents'   => $amount,
 		);
+		$this->mailer->send_order_received( $order_summary, $this->status_url( $session_id ) );
+		$this->mailer->send_owner_sale_notification( $order_summary );
 
 		return new \WP_REST_Response( array( 'received' => true, 'jobId' => $job_id ), 200 );
 	}

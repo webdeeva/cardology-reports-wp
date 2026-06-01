@@ -4,7 +4,7 @@ Tags:              cardology, reports, stripe, payments, ecommerce
 Requires at least: 6.4
 Tested up to:      6.7
 Requires PHP:      8.0
-Stable tag:        1.0.1
+Stable tag:        1.0.2
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,10 @@ By the external Report Writer API (https://report-writer-qt7cc.ondigitalocean.ap
 Yes. Use **Cardology Reports → Reports Catalog**.
 
 == Changelog ==
+
+= 1.0.2 =
+* Email the site owner on every sale (customer name, email, report, amount), with Reply-To set to the customer. Toggle and recipient under Settings → Email.
+* Add a Customers admin screen listing all sales with customer/birth details, status, totals, search, and pagination.
 
 = 1.0.1 =
 * Auto-create the Catalog and Report Status pages on install/upgrade and store them in settings, so the post-payment redirect always has a valid destination.
